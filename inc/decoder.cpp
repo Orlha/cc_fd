@@ -2487,7 +2487,7 @@ int Decoder::decode() {
 					printf(", Character(");
 					printf(getValueOrVarU(3));
 					printf("))");
-					currentScriptPosition += 6;
+					currentScriptPosition += 5;
 					break;
 				}
 				case 0x3D:
