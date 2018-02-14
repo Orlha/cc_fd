@@ -2750,6 +2750,16 @@ int Decoder::decode() {
 					currentScriptPosition += 3;
 					break;
                 }
+                case 0x60:
+				{
+					printf("opFE60(");
+					printf(readCharacter(1));
+					printf(", ");
+					printf(getValueOrVarU(2));
+					printf(")");
+					currentScriptPosition += 4;
+					break;
+				}
 				case 0x61:
 				{
 					printf("opFE61()");
