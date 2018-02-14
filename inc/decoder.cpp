@@ -2898,7 +2898,17 @@ int Decoder::decode() {
 					printf("TOGGLE_CHARACTER_LIMIT_MODE(%s)", getValueOrVarU(1));
 					currentScriptPosition += 3;
 					break;
-				}
+                }
+                case 0x7C:
+                {
+                    printf("opFE7C(");
+					printf(getValueOrVarU(1));
+					printf(", ");
+					printf(getValueOrVarU(3));
+					printf(") // Operation with two variables");
+					currentScriptPosition += 5;
+					break;
+                }
 				case 0x7E:
 				{
 					printf("opFE7E()");
