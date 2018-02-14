@@ -1641,8 +1641,28 @@ int Decoder::decode() {
 		}
 		case 0xB2:
 		{
-			printf("opB2(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getValueOrVarU(2));
-			currentScriptPosition += 4;
+			switch(currentScriptData[currentScriptPosition + 1])
+			{
+                case 0:
+                {
+                    printf("OVERRIDE_FOLLOW?(0x%02X)\n", currentScriptData[currentScriptPosition + 1]);
+				    currentScriptPosition += 2;
+                    break;
+                }
+			    case 1:
+				{
+					printf("OVERRIDE_FOLLOW(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
+					printf(getValueOrVarU(2));
+					printf(")");
+                    currentScriptPosition += 4;
+                    break;
+                }
+                default:
+                {
+                    //assert(0);
+                    return 4;
+                }
+			}
 			break;
 		}
 		case 0xB3:
