@@ -625,21 +625,17 @@ int Decoder::decode() {
 		{
 			if(currentScriptData[currentScriptPosition + 1] != 1)
 			{
-
-				{
-					printf("WALK_TO_POSITION_2(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
-					printf(getValueOrVarS(2, currentScriptData[currentScriptPosition + 6], 0x80));
-					printf(", ");
-					printf(getValueOrVarS(4, currentScriptData[currentScriptPosition + 6], 0x40));
-					printf(", ");
-					printf(getValueOrVarU(7));
-					printf(")");
-				}
+                printf("WALK_TO_POSITION_2(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
+                printf(getValueOrVarS(2, currentScriptData[currentScriptPosition + 6], 0x80));
+                printf(", ");
+                printf(getValueOrVarS(4, currentScriptData[currentScriptPosition + 6], 0x40));
+                printf(", ");
+                printf(getValueOrVarU(7));
+                printf(")");
 				currentScriptPosition += 11;
 			}
 			else
 			{
-
 				printf("WALK_TO_POSITION_2(0x%02X)", currentScriptData[currentScriptPosition + 1]);
 				currentScriptPosition += 2;
 			}
