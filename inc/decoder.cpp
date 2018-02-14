@@ -2733,13 +2733,23 @@ int Decoder::decode() {
 					printf(")");
 					currentScriptPosition += 5;
 					break;
+                }
+                case 0x5D:
+				{
+					printf("opFE5D(");
+					printf(readCharacter(1));
+					printf(", ");
+					printf(getValueOrVarU(2));
+					printf(")");
+					currentScriptPosition += 4;
+					break;
 				}
 				case 0x5E:
 				{
 					printf("SETUP_ELEMENT_SHOP(%s)", getValueOrVarU(1));
 					currentScriptPosition += 3;
 					break;
-				}
+                }
 				case 0x61:
 				{
 					printf("opFE61()");
