@@ -625,20 +625,22 @@ int Decoder::decode() {
 		{
 			if(currentScriptData[currentScriptPosition + 1] != 1)
 			{
-				printf("op43(0x%02X", currentScriptData[currentScriptPosition + 1]);
-				printf(getValueOrVarS(2, currentScriptData[currentScriptPosition + 6], 0x80));
-				printf(", ");
-				printf(getValueOrVarS(4, currentScriptData[currentScriptPosition + 6], 0x40));
-				printf(", ");
-				printf(getValueOrVarS(6, currentScriptData[currentScriptPosition + 6], 0x20));
-				printf(", ");
-				printf(getValueOrVarU(7));
-				printf(")");
-				currentScriptPosition += 9;
+
+				{
+					printf("WALK_TO_POSITION_2(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
+					printf(getValueOrVarS(2, currentScriptData[currentScriptPosition + 6], 0x80));
+					printf(", ");
+					printf(getValueOrVarS(4, currentScriptData[currentScriptPosition + 6], 0x40));
+					printf(", ");
+					printf(getValueOrVarU(7));
+					printf(")");
+				}
+				currentScriptPosition += 11;
 			}
 			else
 			{
-				printf("op43(0x%02X)", currentScriptData[currentScriptPosition + 1]);
+
+				printf("WALK_TO_POSITION_2(0x%02X)", currentScriptData[currentScriptPosition + 1]);
 				currentScriptPosition += 2;
 			}
 			break;
