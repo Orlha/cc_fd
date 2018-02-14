@@ -2343,6 +2343,18 @@ int Decoder::decode() {
 					printf(")");
 					currentScriptPosition += 7;
 					break;
+                }
+                case 0x23:
+				{
+					printf("opFE23( ");
+					printf(getValueOrVarU(1));
+					printf(", ");
+					printf(getValueOrVarU(3));
+					printf(", ");
+					printf(getValueOrVarU(5));
+					printf(")");
+					currentScriptPosition += 7;
+					break;
 				}
 				case 0x25:
 				{
