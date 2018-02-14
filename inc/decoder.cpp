@@ -2479,16 +2479,6 @@ int Decoder::decode() {
 					printf(")");
 					currentScriptPosition += 6;
 					break;
-                }
-                case 0x3B:
-				{
-					printf("opFE3B(");
-					printf(getValueOrVarU(1));
-					printf(", Character(");
-					printf(getValueOrVarU(3));
-					printf("))");
-					currentScriptPosition += 5;
-					break;
 				}
 				case 0x3D:
 				{
