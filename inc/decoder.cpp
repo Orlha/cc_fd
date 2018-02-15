@@ -2840,6 +2840,12 @@ int Decoder::decode() {
 					printf("opFE6B(0x%02X)", currentScriptData[currentScriptPosition + 1]);
 					currentScriptPosition += 2;
 					break;
+                }
+                case 0x6C:
+				{
+					printf("opFE6C(0x%02X)", getScriptByte(currentScriptPosition + 1));
+					currentScriptPosition += 2;
+					break;
 				}
 				case 0x6D:
 				{
