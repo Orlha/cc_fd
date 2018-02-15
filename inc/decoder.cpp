@@ -952,7 +952,7 @@ int Decoder::decode() {
                         printf(readCharacter(2));
                         printf(", ");
                         printf(getValueOrVarU(3));
-                        printf(")");
+                        printf(") //? Check PC1 in CD0-373-Temporal Vortex - Confusion Complex");
                         currentScriptPosition += 5;
                     //}
                     break;
