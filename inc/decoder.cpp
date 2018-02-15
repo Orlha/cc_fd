@@ -2502,6 +2502,12 @@ int Decoder::decode() {
 					printf("))");
 					currentScriptPosition += 5;
 					break;
+                }
+                case 0x3C:
+				{
+					printf("opFE3C()");
+					currentScriptPosition += 6;
+					break;
 				}
 				case 0x3D:
 				{
