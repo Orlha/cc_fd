@@ -1107,7 +1107,7 @@ int Decoder::decode() {
 		case 0x73:
 		{
             const char* varBitNumAsString = getValueOrVarS(1, currentScriptData[currentScriptPosition + 3], 0x80);
-            printf("JUMP 0x%04X IF VAR_BIT[%s] CLEAR\n", read16u(4), varBitNumAsString, 0x80);
+            printf("JUMP 0x%04X IF VAR_BIT[%s] CLEAR", read16u(4), varBitNumAsString, 0x80);
 			currentScriptPosition += 6;
 			break;
 		}
@@ -2906,6 +2906,12 @@ int Decoder::decode() {
 					printf(limitIdAsString);
 					printf(")");
 					currentScriptPosition += 5;
+					break;
+                }
+                case 0x75:  
+				{
+					printf("opFE75(%s) //? SETUP_GRANDSLAM_SCREEN", getValueOrVarU(1));
+					currentScriptPosition += 3;
 					break;
 				}
 				case 0x76:
