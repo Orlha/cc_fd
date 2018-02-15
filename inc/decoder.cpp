@@ -2126,6 +2126,12 @@ int Decoder::decode() {
 			printf("if Character(%s) not recruited, jump 0x%04X", getValueOrVarU(1), read16u(3));
 			currentScriptPosition += 5;
 			break;
+        }
+        case 0xE7:
+		{
+			printf("opE7() //? Related to op9B op9C");
+			currentScriptPosition += 5;
+			break;
 		}
 		case 0xE9:
 		{
