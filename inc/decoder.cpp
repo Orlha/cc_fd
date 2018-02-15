@@ -2977,7 +2977,7 @@ int Decoder::decode() {
                 }
                 case 0x82:
 				{
-					printf("opFE82(0x%02X)", currentScriptData[currentScriptPosition + 1]);
+					printf("opFE82(0x%02X) //?", currentScriptData[currentScriptPosition + 1]);
 					currentScriptPosition += 2;
 					break;
 				}
