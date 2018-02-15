@@ -2392,7 +2392,13 @@ int Decoder::decode() {
 					currentScriptPosition += 3;
 					break;
 				}
-				case 0x2F:
+                case 0x2E:
+				{
+					printf("opFE2E()");
+					currentScriptPosition += 1;
+					break;
+				}
+                case 0x2F:
 				{
 					printf("opFE2F()");
 					currentScriptPosition += 1;
