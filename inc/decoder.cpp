@@ -1083,7 +1083,7 @@ int Decoder::decode() {
 		case 0x70:
 		{
 			unsigned long int arrayOffset = read16u(1);
-			printf("%s = array_0x%02X[%s] %d\n", getVarName(read16u(3)), arrayOffset, getValueOrVarU(5), currentScriptData[currentScriptPosition + 7]);
+			printf("%s = array_0x%02X[%s] %d", getVarName(read16u(3)), arrayOffset, getValueOrVarU(5), currentScriptData[currentScriptPosition + 7]);
 
 			//assert((decompileArray[arrayOffset]._type == TYPE_UNK) || (decompileArray[arrayOffset]._type == TYPE_ARRAY_16));
 			//decompileArray[arrayOffset]._type = TYPE_ARRAY_16;
