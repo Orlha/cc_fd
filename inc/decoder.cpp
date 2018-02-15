@@ -2951,6 +2951,12 @@ int Decoder::decode() {
 					currentScriptPosition += 5;
 					break;
                 }
+                case 0x7D:
+				{
+					printf("opFE7D(%s)", getValueOrVarU(1));
+					currentScriptPosition += 3;
+					break;
+				}
 				case 0x7E:
 				{
 					printf("opFE7E()");
