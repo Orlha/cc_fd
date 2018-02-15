@@ -1107,7 +1107,7 @@ int Decoder::decode() {
 		case 0x73:
 		{
             const char* varBitNumAsString = getValueOrVarS(1, currentScriptData[currentScriptPosition + 3], 0x80);
-            printf("JUMP 0x%04X IF VAR_BIT[%s] CLEAR\n", read16u(4), varBitNumAsString, 0x80));
+            printf("JUMP 0x%04X IF VAR_BIT[%s] CLEAR\n", read16u(4), varBitNumAsString, 0x80);
 			currentScriptPosition += 6;
 			break;
 		}
