@@ -2822,6 +2822,12 @@ int Decoder::decode() {
 					printf("SETUP_WEAPON_SHOP(%s)", getValueOrVarU(1));
 					currentScriptPosition += 3;
 					break;
+                }
+                case 0x69:
+				{
+					printf("opFE69(0x%02X)", currentScriptData[currentScriptPosition + 1]);
+					currentScriptPosition += 2;
+					break;
 				}
 				case 0x6B:
 				{
