@@ -1106,7 +1106,8 @@ int Decoder::decode() {
 		}
 		case 0x73:
 		{
-			printf("if VAR_BIT[%s] CLEAR, jump 0x%04X", getValueOrVarS(1, currentScriptData[currentScriptPosition + 3], 0x80), read16u(5));
+            const char* varBitNumAsString = getValueOrVarS(1, currentScriptData[currentScriptPosition + 3], 0x80);
+            printf("JUMP 0x%04X IF VAR_BIT[%s] CLEAR\n", read16u(4), varBitNumAsString, 0x80));
 			currentScriptPosition += 6;
 			break;
 		}
@@ -2910,6 +2911,12 @@ int Decoder::decode() {
 				case 0x76:
 				{
 					printf("%s = opFE76()", getVarName(read16u(1)));
+					currentScriptPosition += 3;
+					break;
+                }
+                case 0x77:
+				{
+					printf("opFE77() //?");
 					currentScriptPosition += 3;
 					break;
 				}
