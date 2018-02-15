@@ -2145,6 +2145,12 @@ int Decoder::decode() {
 			unsigned char subOpcode = currentScriptData[currentScriptPosition];
 			switch(subOpcode)
 			{
+                case 0x00:
+				{
+					printf("opFE00(0x%02X)", currentScriptData[currentScriptPosition + 1]);
+					currentScriptPosition += 2;
+					break;
+				}
 				case 0x01:
 				{
 					printf("opFE01(0x%02X)", currentScriptData[currentScriptPosition + 1]);
