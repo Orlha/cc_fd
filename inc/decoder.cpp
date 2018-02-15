@@ -6,6 +6,10 @@ Decoder::Decoder(unsigned char * script_data, int * offset) {
 	script_begin = * position;
 }
 
+vector<int> * Decoder::getJumps() {
+    return &jumps;
+}
+
 unsigned short int Decoder::read16u(int idx)
 {
 	return *(short unsigned int*)(script + * position + idx);
@@ -173,7 +177,8 @@ int Decoder::decode() {
 		case 0x01:
 		{
 			printf("JUMP(0x%04X)", read16u(1));
-			currentScriptPosition += 3;
+            currentScriptPosition += 3;
+            jumps.push_back(read16u(1));
 			break;
 		}
 		case 0x02:

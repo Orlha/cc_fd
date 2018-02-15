@@ -4,7 +4,9 @@ Reader::Reader() {
 	length = 0;
 	script = NULL;
 	pos = 0;
-	rel_pos = 0;
+    rel_pos = 0;
+    cur_ent = 0;
+    cur_scr = 0;
 	entity_counter = 0;
 	entity = NULL;
 }
@@ -13,6 +15,33 @@ Reader::~Reader() {
 	delete decoder;
 	delete[] script;
 	delete[] entity;
+}
+
+bool Reader::atEntity() {
+    bool ret_code = false;
+    for (int ent = 0; ent < entity_counter; ent++) {
+        for (int scr = 0; scr < 32; scr++) {
+            int value = entity[ent].script[scr];
+            if (value == pos - rel_pos && (value != 0x0000 || scr == 0)) {
+                cur_ent = ent;
+                cur_scr = scr;
+                printf("---------------------------\n");
+                printf("| Entity %d script %d\n", cur_ent, cur_scr);
+                printf("---------------------------\n");
+                ret_code = true;
+            }
+        }
+    }
+    return ret_code;
+}
+bool Reader::atJump() {
+    for(vector<int>::iterator it = jumps->begin(); it != jumps->end(); ++it) {
+        int value = * it;
+        if (value == pos - rel_pos) {
+            return true;
+        }
+    }
+    return false;
 }
 
 int Reader::initFile(string filename) {
@@ -77,7 +106,8 @@ int Reader::readEntities() {
 }
 
 int Reader::initDecoder() {
-	decoder = new Decoder(script, &pos);
+    decoder = new Decoder(script, &pos);
+    jumps = decoder->getJumps();
 	return 0;
 }
 
@@ -91,23 +121,18 @@ int Reader::decompile() {
 		}
 		printf("}\n");
 	}
-	
-	int cur_ent;
-	int cur_scr;
-	
+		
 	while(pos < length) {
-		for (int ent = 0; ent < entity_counter; ent++) {
-			for (int scr = 0; scr < 32; scr++) {
-				int value = entity[ent].script[scr];
-				if (value == pos - rel_pos && (value != 0x0000 || scr == 0)) {
-					printf("---------------------------\n");
-					printf("| Entity %d script %d\n", ent, scr);
-					printf("---------------------------\n");
-					cur_ent = ent;
-					cur_scr = scr;
-				}
-			}
-		}
+        
+        if (atEntity()) {
+            // print
+        }
+
+        if (atJump()) {
+            //printf("If this thing is unk then it should be decompiled.\n");
+        }
+
+        
 		int result = decoder->decode();
 		
 		// succesfully decoded:

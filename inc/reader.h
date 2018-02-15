@@ -15,10 +15,17 @@ class Reader {
 		unsigned char * script;
 		int pos;
 		int rel_pos;
-		int entity_counter;
+        int entity_counter;
+        
+        int cur_ent;
+        int cur_scr;
 		
 		Entity * entity;
-		Decoder * decoder;
+        Decoder * decoder;
+        vector<int> * jumps;
+        
+        bool atEntity();
+        bool atJump();
     public:
     	Reader();
     	~Reader();
@@ -29,6 +36,6 @@ class Reader {
     	int readEntities();
     	
     	int initDecoder();
-    	int decompile();
+        int decompile();
 };
 #endif
