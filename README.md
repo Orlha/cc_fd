@@ -6,4 +6,4 @@ Fieldscript Decompiler is actually opcode-decoder that provides an ability to ea
 
 This work is a partial rewrite of similar projects — which were bugged/undone or were a part of bigger application.
 
-No one will ever remember a full list of possible authors or even resources they are lived in, but thanks everyone — tripletech, compendium and all those old forums which are lost and forgotten.
+No one will ever remember a full list of possible authors or even resources they are lived in, but thanks everyone — tripletech, compendium and all those old forums which are lost and forgotten by now.
