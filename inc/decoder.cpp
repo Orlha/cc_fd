@@ -937,35 +937,37 @@ int Decoder::decode() {
 		{
 			switch(currentScriptData[currentScriptPosition + 1])
 			{
-			case 0:
-				if(strcmp("PC0", readCharacter(2)) == 0)
+                case 0x00:
+                {
+                    if(strcmp("PC0", readCharacter(2)) == 0)
+                    {
+                        //assert(0);
+                        return 4;
+                    }
+                    else
+                    {
+                        printf("CAMERA_FOLLOW_CHARACTER(%d, ", currentScriptData[currentScriptPosition + 1]);
+                        printf(readCharacter(2));
+                        printf(", ");
+                        printf(getValueOrVarU(3));
+                        printf(")");
+                        currentScriptPosition += 5;
+                    }
+                    break;
+                }
+			    case 0x01:
 				{
-					//assert(0);
-					return 4;
-				}
-				else
-				{
-					printf("CAMERA_FOLLOW_CHARACTER(%d, ", currentScriptData[currentScriptPosition + 1]);
-					printf(readCharacter(2));
-					printf(", ");
-					printf(getValueOrVarU(3));
-					printf(")");
-					currentScriptPosition += 5;
-				}
-				break;
-			case 1:
-				{
-
 					printf("CAMERA_FOLLOW_CHARACTER(%d) // wait for camera to reach destination", currentScriptData[currentScriptPosition + 1]);
 					currentScriptPosition += 2;
 					break;
 				}
-			default:
-				//assert(0);
-				return 4;
-				break;
+                default:
+                {
+                    //assert(0);
+                    return 4;
+                    break;
+                }
 			}
-
 			break;
 		}
 		case 0x62:

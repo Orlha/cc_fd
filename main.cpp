@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 	
 	ret_code = reader.decompile();
 	if (ret_code != 0) {
-		//printf("FATAL: Something terrible has happened;\n");
+		printf("FATAL: Something terrible has happened;\n");
 	}
 	return ret_code;
 }
