@@ -709,7 +709,7 @@ int Decoder::decode() {
 		case 0x48:
 		{
 			// setup 3 variables
-			printf("op48(%s, 0x%04X, 0x%04X, 0x%04X)", readCharacter(1), read16u(2), read16u(4), read16u(6));
+			printf("GET_POSITION(%s, 0x%04X, 0x%04X, 0x%04X)", readCharacter(1), read16u(2), read16u(4), read16u(6));
 			currentScriptPosition += 8;
 			break;
 		}
