@@ -939,6 +939,7 @@ int Decoder::decode() {
 			{
                 case 0x00:
                 {
+                    /*
                     if(strcmp("PC0", readCharacter(2)) == 0)
                     {
                         //assert(0);
@@ -946,13 +947,14 @@ int Decoder::decode() {
                     }
                     else
                     {
+                        */
                         printf("CAMERA_FOLLOW_CHARACTER(%d, ", currentScriptData[currentScriptPosition + 1]);
                         printf(readCharacter(2));
                         printf(", ");
                         printf(getValueOrVarU(3));
                         printf(")");
                         currentScriptPosition += 5;
-                    }
+                    //}
                     break;
                 }
 			    case 0x01:
