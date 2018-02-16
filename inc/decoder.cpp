@@ -325,7 +325,8 @@ int Decoder::decode() {
 		case 0x0D:
 		{
 			printf("OP_RETURN()");
-			currentScriptPosition += 1;
+            currentScriptPosition += 1;
+            ret_code = 1;
 			break;
 		}
 		case 0x0E:
@@ -612,7 +613,7 @@ int Decoder::decode() {
 		{
 			printf("STOP_SCRIPT_EXEC()");
 			currentScriptPosition += 1;
-			//return 1;
+			ret_code = 1;
 			break;
 		}
 		case 0x3C:
@@ -963,8 +964,10 @@ int Decoder::decode() {
 				}
 				default:
 				{
-					//assert(0);
-					return 4;
+                    //assert(0);
+                    printf("JUMP_MOVE() //? Unrecognized argument, unable to determine length");
+                    currentScriptPosition += 0x2;
+					ret_code = 4;
 					break;
 				}
 				
