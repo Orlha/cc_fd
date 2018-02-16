@@ -3,7 +3,13 @@
 Decoder::Decoder(unsigned char * script_data, int * offset) {
 	script = script_data;
 	position = offset;
-	script_begin = * position;
+    script_begin = * position;
+    initMap();
+}
+
+void Decoder::initMap() {
+    switch_map[0x00]  = &Decoder::op0x00;
+    return;
 }
 
 vector<unsigned int> * Decoder::getJumps() {
@@ -155,6 +161,14 @@ char* Decoder::getVarName(int varIdx)
 }
 
 
+int Decoder::op0x00() {
+    printf("STOP()");
+    //int & currentScriptPosition = * position;
+    //currentScriptPosition += 1;
+    return 1;
+}
+
+
 int Decoder::decode() {
 	int & currentScriptPosition = * position;
 	int & pos = * position;
@@ -165,7 +179,22 @@ int Decoder::decode() {
 	
 	int ret_code = 0;
 	
-	int pre_pos = * position;
+    int pre_pos = * position;
+
+
+    (this->*switch_map[0x00])();
+    printf("0x%02X\n", getOpcodeLength(0x00));
+
+
+    if (code == 0x00) {
+        (this->*switch_map[0x00])();
+    } else {
+        return 4;
+    }
+    
+
+    
+
 	switch(code)
 	{
 		case 0x00: {
