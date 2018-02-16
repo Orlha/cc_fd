@@ -1543,7 +1543,7 @@ int Decoder::decode() {
 		}
 		case 0x95:
 		{
-			printf("if UNKCHECK_Character_op95(%s) jump 0x%04X", getValueOrVarU(1), read16u(3));
+			printf("IF_CHARACTER_IN_ENDGAME_ROSTER(%s) jump 0x%04X", getValueOrVarU(1), read16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
@@ -1587,7 +1587,7 @@ int Decoder::decode() {
 		}
 		case 0x9C:
 		{
-			printf("op9C(\"%c%c%c%c\")", currentScriptData[currentScriptPosition + 1], currentScriptData[currentScriptPosition + 2], currentScriptData[currentScriptPosition + 3], currentScriptData[currentScriptPosition + 4]);
+			printf("HIDE_DRP_RESOURCE(\"%c%c%c%c\")", currentScriptData[currentScriptPosition + 1], currentScriptData[currentScriptPosition + 2], currentScriptData[currentScriptPosition + 3], currentScriptData[currentScriptPosition + 4]);
 			currentScriptPosition += 5;
 			break;
 		}
@@ -1735,7 +1735,7 @@ int Decoder::decode() {
 		}
 		case 0xAE:
 		{
-			printf("opAE(0x%02X)", currentScriptData[currentScriptPosition + 1]);
+			printf("CAN_ACTIVATED_BY_ITEM(0x%02X)", currentScriptData[currentScriptPosition + 1]);
 			currentScriptPosition += 2;
 			break;
 		}
@@ -2078,13 +2078,13 @@ int Decoder::decode() {
 		}
 		case 0xD1:
 		{
-			printf("opD1(%s)", getValueOrVarU(1));
+			printf("SETUP_NPC_2(%s)", getValueOrVarU(1));
 			currentScriptPosition += 3;
 			break;
 		}
 		case 0xD2:
 		{
-			printf("opD2()");
+			printf("opD2()            // hide npc? usually put after battle");
 			currentScriptPosition += 1;
 			break;
 		}
