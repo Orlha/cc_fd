@@ -4,11 +4,44 @@ Decoder::Decoder(unsigned char * script_data, int * offset) {
 	script = script_data;
 	position = offset;
     script_begin = * position;
+    output = false;
+    ret_code = 0;
     initMap();
 }
 
 void Decoder::initMap() {
-    switch_map[0x00]  = &Decoder::op0x00;
+    switch_map[0x00] = &Decoder::op0x00;
+    switch_map[0x01] = &Decoder::op0x01;
+    switch_map[0x02] = &Decoder::op0x02;
+    switch_map[0x03] = &Decoder::op0x03;
+    switch_map[0x04] = &Decoder::op0x04;
+    switch_map[0x05] = &Decoder::op0x05;
+    switch_map[0x06] = &Decoder::op0x06;
+    switch_map[0x07] = &Decoder::op0x07;
+    switch_map[0x08] = &Decoder::op0x08;
+    switch_map[0x09] = &Decoder::op0x09;
+    switch_map[0x0A] = &Decoder::op0x0A;
+    switch_map[0x0B] = &Decoder::op0x0B;
+    switch_map[0x0C] = &Decoder::op0x0C;
+    switch_map[0x0D] = &Decoder::op0x0D;
+    switch_map[0x0E] = &Decoder::op0x0E;
+    switch_map[0x0F] = &Decoder::op0x0F;
+    switch_map[0x10] = &Decoder::op0x10;
+    switch_map[0x11] = &Decoder::op0x11;
+    switch_map[0x12] = &Decoder::op0x12;
+    switch_map[0x13] = &Decoder::op0x13;
+    switch_map[0x14] = &Decoder::op0x14;
+    switch_map[0x15] = &Decoder::op0x15;
+    switch_map[0x16] = &Decoder::op0x16;
+    switch_map[0x17] = &Decoder::op0x17;
+    switch_map[0x18] = &Decoder::op0x18;
+    switch_map[0x19] = &Decoder::op0x19;
+    switch_map[0x1A] = &Decoder::op0x1A;
+    switch_map[0x1B] = &Decoder::op0x1B;
+    switch_map[0x1C] = &Decoder::op0x1C;
+    switch_map[0x1D] = &Decoder::op0x1D;
+    switch_map[0x1E] = &Decoder::op0x1E;
+    switch_map[0x1F] = &Decoder::op0x1F;
     return;
 }
 
@@ -39,8 +72,7 @@ bool Decoder::isNumeric(const char* string)
 	return true;
 }
 
-
-char * Decoder::getValueOrVarU(int idx)
+char * Decoder::getVar16u(int idx)
 {
 	unsigned short int var = read16u(idx);
 	if(!(var & 0x8000))
@@ -55,7 +87,7 @@ char * Decoder::getValueOrVarU(int idx)
 	return tempBuffer;
 }
 
-char* Decoder::getValueOrVarS(int idx, int arg1, int arg2)
+char* Decoder::getVar16s(int idx, int arg1, int arg2)
 {
 	if(arg1 & arg2)
 	{
@@ -160,221 +192,244 @@ char* Decoder::getVarName(int varIdx)
 	return tempVarName;
 }
 
-
+/////////////////////////////////////////////////////////////////////
 int Decoder::op0x00() {
-    printf("STOP()");
-    //int & currentScriptPosition = * position;
-    //currentScriptPosition += 1;
+    sprintf(descBuffer, "STOP()");
+    ret_code = 1;
     return 1;
 }
+int Decoder::op0x01() {
+    sprintf(descBuffer, "JUMP(0x%04X)", read16u(1));
+    jumps.push_back(read16u(1));
+    return 3;
+}
+int Decoder::op0x02() {
+    unsigned char flag = script[* position + 5];
+    char value1[256];
+    char value2[256];
+    unsigned short int jumpOffset = read16u(6);
 
+    if(flag & 0x80)
+    {
+        sprintf(value1, "%d", read16s(1));
+    }
+    else
+    {
+        strcpy(value1, getVar16u(1));
+    }
+
+    if(flag & 0x40)
+    {
+        sprintf(value2, "%d", read16s(3));
+    }
+    else
+    {
+        strcpy(value2, getVar16u(3));
+    }
+
+    switch(flag & 0xF)
+    {
+        case 0x0:
+            sprintf(descBuffer, "IF_JUMP(%s == %s, 0x%04X)", value1, value2, jumpOffset);
+            break;
+        case 0x1:
+            sprintf(descBuffer, "IF_JUMP(%s != %s, 0x%04X)", value1, value2, jumpOffset);
+            break;
+        case 0x2:
+            sprintf(descBuffer, "IF_JUMP(%s > %s, 0x%04X)", value1, value2, jumpOffset);
+            break;
+        case 0x3:
+            sprintf(descBuffer, "IF_JUMP(%s < %s, 0x%04X)", value1, value2, jumpOffset);
+            break;
+        case 0x4:
+            sprintf(descBuffer, "IF_JUMP(%s >= %s, 0x%04X)", value1, value2, jumpOffset);
+            break;
+        case 0x5:
+            sprintf(descBuffer, "IF_JUMP(%s <= %s, 0x%04X)", value1, value2, jumpOffset);
+            break;
+        case 0x6:
+            sprintf(descBuffer, "IF_JUMP(%s & %s, 0x%04X)", value1, value2, jumpOffset);
+            break;
+        case 0x7:
+            sprintf(descBuffer, "IF_JUMP(%s != %s, 0x%04X)", value1, value2, jumpOffset);
+            break;
+        case 0x8:
+            sprintf(descBuffer, "IF_JUMP(%s | %s, 0x%04X)", value1, value2, jumpOffset);
+            break;
+        case 0x9:
+            sprintf(descBuffer, "IF_JUMP(%s & %s, 0x%04X)", value1, value2, jumpOffset);
+            break;
+        case 0xA:
+            sprintf(descBuffer, "IF_JUMP(%s ~ %s, 0x%04X)", value1, value2, jumpOffset);
+            break;
+        default:
+            sprintf(descBuffer, "IF_JUMP(ALWAYS, 0x%04X) //? most probably a decompiler bug", value1, value2, jumpOffset);
+            break;
+    }
+    jumps.push_back(jumpOffset);
+    return 8;
+}
+int Decoder::op0x03() {
+    sprintf(descBuffer, "op03()");
+    return 1;
+}
+int Decoder::op0x04() {
+    sprintf(descBuffer, "op04() // kill script like");
+	return 1;
+}
+int Decoder::op0x05() {
+    sprintf(descBuffer, "CALL(0x%04X)", read16u(1));
+    return 3;
+}
+int Decoder::op0x06() {
+    sprintf(descBuffer, "op06() // kill script like");
+    return 1;
+}
+int Decoder::op0x07() {
+    sprintf(descBuffer, "RUN_ENTITY_SCRIPT_ASYNC(%s, script %d, 0x%02X)", readCharacter(1), script[* position + 2]&0xF, script[* position + 2]&0xF0);
+	return 3;
+}
+int Decoder::op0x08() {
+    sprintf(descBuffer, "RUN_ENTITY_SCRIPT_UNKMODE(%s, script %d, 0x%02X)", readCharacter(1), script[* position + 2]&0xF, script[* position + 2]&0xF0);
+    return 3;
+}
+int Decoder::op0x09() {
+    sprintf(descBuffer, "RUN_ENTITY_SCRIPT_BLOCKING(%s, script %d, 0x%02X)", readCharacter(1), script[* position + 2]&0xF, script[* position + 2]&0xF0);
+	return 3;
+}
+int Decoder::op0x0A() {
+    sprintf(descBuffer, "UPDATE_CHARACTER()");
+    return 1;
+}
+int Decoder::op0x0B() {
+    sprintf(descBuffer, "UPDATE_CHARACTER_AND_STOP()");
+    return 1;
+}
+int Decoder::op0x0C() {
+    sprintf(descBuffer, "op0C() // NOP");
+    return 1;
+}
+int Decoder::op0x0D() {
+    sprintf(descBuffer, "OP_RETURN()");
+    ret_code = 1;
+	return 1;
+}
+int Decoder::op0x0E() {
+    sprintf(descBuffer, "SETUP_PC(%s)", readCharacter(1));
+    return 3;
+}
+int Decoder::op0x0F() {
+    sprintf(descBuffer, "SETUP_NPC(%s)", getVar16u(1));
+    return 3;
+}
+int Decoder::op0x10() {
+    sprintf(descBuffer, "%s = %s", getVarName(read16u(1)), getVar16s(3, script[* position  + 5], 0x40));
+    return 6;
+}
+int Decoder::op0x11() {
+    sprintf(descBuffer, "%s = 1", getVarName(read16u(1)));
+    return 3;
+}
+int Decoder::op0x12() {
+    sprintf(descBuffer, "%s = 0", getVarName(read16u(1)));
+    return 3;
+}
+int Decoder::op0x13() {
+    sprintf(descBuffer, "%s += %s", getVarName(read16u(1)), getVar16s(3, script[* position + 5], 0x40));
+    return 6;
+}
+int Decoder::op0x14() {
+    sprintf(descBuffer, "%s -= %s", getVarName(read16u(1)), getVar16s(3, script[* position + 5], 0x40));
+    return 6;
+}
+int Decoder::op0x15() {
+    sprintf(descBuffer, "%s |= %s", getVarName(read16u(1)), getVar16s(3, script[* position + 5], 0x40));
+    return 6;
+}
+int Decoder::op0x16() {
+    sprintf(descBuffer, "%s ^= %s", getVarName(read16u(1)), getVar16s(3, script[* position + 5], 0x40));
+    return 6;
+}
+int Decoder::op0x17() {
+    sprintf(descBuffer, "%s ++", getVarName(read16u(1)));
+    return 3;
+}
+int Decoder::op0x18() {
+    sprintf(descBuffer, "%s --", getVarName(read16u(1)));
+    return 3;
+}
+int Decoder::op0x19() {
+    sprintf(descBuffer, "%s &= %s", getVarName(read16u(1)), getVar16s(3, script[* position + 5], 0x40));
+    return 6;
+}
+int Decoder::op0x1A() {
+    sprintf(descBuffer, "%s |= %s", getVarName(read16u(1)), getVar16s(3, script[* position + 5], 0x40));
+    return 6;
+}
+int Decoder::op0x1B() {
+    sprintf(descBuffer, "%s ^= %s", getVarName(read16u(1)), getVar16s(3, script[* position + 5], 0x40));
+    return 6;
+}
+int Decoder::op0x1C() {
+    sprintf(descBuffer, "%s <<= %s", getVarName(read16u(1)), getVar16u(3));
+    return 5;
+}
+int Decoder::op0x1D() {
+    sprintf(descBuffer, "%s >>= %s", getVarName(read16u(1)), getVar16u(3));
+    return 5;
+}
+int Decoder::op0x1E() {
+    sprintf(descBuffer, "%s = rand()", getVarName(read16u(1)));
+    return 3;
+}
+int Decoder::op0x1F() {
+    sprintf(descBuffer, "%s = rand()%%%s", getVarName(read16u(1)), getVar16u(3));
+    return 5;
+}
 
 int Decoder::decode() {
-	int & currentScriptPosition = * position;
 	int & pos = * position;
-	unsigned char * currentScriptData = script;
 	
 	printf("0x%04x: ", pos - script_begin);
-	int code = script[pos];
-	
-	int ret_code = 0;
-	
+	int code = script[pos];	
     int pre_pos = * position;
 
-    /*
-    (this->*switch_map[0x00])();
-    printf("0x%02X\n", getOpcodeLength(0x00));
-    */
+    //(this->*switch_map[0x00])();
+    //printf("0x%02X\n", getOpcodeLength(0x00));
+    
+    int code_length = 0;
+    ret_code = 0;
+
+    code = 0x10;
+    memset(&descBuffer[0], 0, sizeof(descBuffer));
+    auto search = switch_map.find(code);
+    if(search != switch_map.end()) {
+        code_length = (this->*search->second)();
+    }
+    else {
+        printf("FATAL: unknown opcode %02X", code);
+        code_length = 1;
+    }
+
+    printf(descBuffer);
+    memset(&descBuffer[0], 0, sizeof(descBuffer));
+
+    pos += code_length;
+
+	printf("\n{");
+	for (int i = 0; i < code_length; i++) {
+		printf("%02X ", script[pre_pos + i]);
+	}
+	printf("}\n");
+	fflush(stdout);
+	return ret_code;
+
+    //printf("%d\n", ret_code);
+    //return 4;
 
     /*
-    if (code == 0x00) {
-        (this->*switch_map[0x00])();
-    } else {
-        return 4;
-    }
-    */
-    
 	switch(code)
 	{
-		case 0x00: {
-			printf("STOP()");
-			currentScriptPosition += 1;
-			ret_code = 1;
-			break;
-		}
-		case 0x01:
-		{
-			printf("JUMP(0x%04X)", read16u(1));
-            currentScriptPosition += 3;
-            jumps.push_back(read16u(1));
-			break;
-		}
-		case 0x02:
-		{
-			unsigned char flag = currentScriptData[currentScriptPosition + 5];
-
-			char value1[256];
-			char value2[256];
-
-            unsigned short int jumpOffset = read16u(6);
-            
-            jumps.push_back(jumpOffset);
-
-			if(flag & 0x80)
-			{
-				sprintf(value1, "%d", read16s(1));
-			}
-			else
-			{
-				strcpy(value1, getValueOrVarU(1));
-			}
-
-			if(flag & 0x40)
-			{
-				sprintf(value2, "%d", read16s(3));
-			}
-			else
-			{
-				strcpy(value2, getValueOrVarU(3));
-			}
-
-            /*
-			if(strcmp(value1, "USED_KEY_ITEM") == 0)
-			{
-				if(flag & 0x40)
-				{
-					sprintf(value2, "\"%s\"", GetItemName(readU16FromScript(3)));
-				}
-            }
-            */
-
-			switch(flag & 0xF)
-			{
-			case 0x0:
-                printf("IF_JUMP(%s == %s, 0x%04X)", value1, value2, jumpOffset);
-				break;
-			case 0x1:
-                printf("IF_JUMP(%s != %s, 0x%04X)", value1, value2, jumpOffset);
-				break;
-			case 0x2:
-                printf("IF_JUMP(%s > %s, 0x%04X)", value1, value2, jumpOffset);
-				break;
-			case 0x3:
-                printf("IF_JUMP(%s < %s, 0x%04X)", value1, value2, jumpOffset);
-				break;
-			case 0x4:
-                printf("IF_JUMP(%s >= %s, 0x%04X)", value1, value2, jumpOffset);
-				break;
-			case 0x5:
-                printf("IF_JUMP(%s <= %s, 0x%04X)", value1, value2, jumpOffset);
-				break;
-			case 0x6:
-                printf("IF_JUMP(%s & %s, 0x%04X)", value1, value2, jumpOffset);
-				break;
-			case 0x7:
-                printf("IF_JUMP(%s != %s, 0x%04X)", value1, value2, jumpOffset);
-				break;
-			case 0x8:
-                printf("IF_JUMP(%s | %s, 0x%04X)", value1, value2, jumpOffset);
-				break;
-			case 0x9:
-                printf("IF_JUMP(%s & %s, 0x%04X)", value1, value2, jumpOffset);
-				break;
-			case 0xA:
-                printf("IF_JUMP(%s ~ %s, 0x%04X)", value1, value2, jumpOffset);
-				break;
-			default:
-                printf("IF_JUMP(ALWAYS, 0x%04X) //? most probably a decompiler bug", value1, value2, jumpOffset);
-				break;
-			}
-			currentScriptPosition += 8;
-			break;
-		}
-		case 0x03:
-		{
-			printf("op03()");
-			currentScriptPosition += 1;
-			break;
-		}
-		case 0x04:
-		{
-			printf("op04() // kill script like");
-			currentScriptPosition += 1;
-			break;
-		}
-		case 0x05:
-		{
-			printf("CALL(0x%04X)", read16u(1));
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x06:
-		{
-			printf("op06() // kill script like");
-			currentScriptPosition += 1;
-			break;
-		}
-		case 0x07:
-		{
-			printf("RUN_ENTITY_SCRIPT_ASYNC(%s, 0x%02X)", readCharacter(1), currentScriptData[currentScriptPosition + 2]);
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x08:
-		{
-			printf("RUN_ENTITY_SCRIPT_UNKMODE(%s, 0x%02X)", readCharacter(1), currentScriptData[currentScriptPosition + 2]);
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x09:
-		{
-			printf("RUN_ENTITY_SCRIPT_BLOCKING(%s, 0x%02X)", readCharacter(1), currentScriptData[currentScriptPosition + 2]);
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x0A:
-		{
-			printf("op0A()");
-			currentScriptPosition += 1;
-			break;
-		}
-		case 0x0B:
-		{
-			printf("UPDATE_CHARACTER_AND_STOP()");
-			currentScriptPosition += 1;
-			break;
-		}
-		case 0x0C:
-		{
-			printf("op0C() // NOP");
-			currentScriptPosition += 1;
-			break;
-		}
-		case 0x0D:
-		{
-			printf("OP_RETURN()");
-            currentScriptPosition += 1;
-            ret_code = 1;
-			break;
-		}
-		case 0x0E:
-		{
-			printf("SETUP_PC(%s)", readCharacter(1));
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0X0F:
-		{
-			printf("SETUP_NPC(%s)", getValueOrVarU(1));
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x10:
-		{
-			printf("var[0x%04X] = %s", read16u(1), getValueOrVarS(3, currentScriptData[currentScriptPosition + 5], 0x40));
-			currentScriptPosition += 6;
-			break;
-		}
 		case 0x11:
 		{
 			printf("var[%04X] = true", read16u(1));
@@ -389,25 +444,25 @@ int Decoder::decode() {
 		}
 		case 0x13:
 		{
-			printf("var[0x%04X] += %s", read16u(1), getValueOrVarS(3, currentScriptData[currentScriptPosition + 5], 0x40));
+			printf("var[0x%04X] += %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
 			currentScriptPosition += 6;
 			break;			
 		}
 		case 0x14:
 		{
-			printf("var[0x%04X] -= %s", read16u(1), getValueOrVarS(3, currentScriptData[currentScriptPosition + 5], 0x40));
+			printf("var[0x%04X] -= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
 			currentScriptPosition += 6;
 			break;			
 		}
 		case 0x15:
 		{
-			printf("var[0x%04X] |= %s", read16u(1), getValueOrVarS(3, currentScriptData[currentScriptPosition + 5], 0x40));
+			printf("var[0x%04X] |= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
 			currentScriptPosition += 6;
 			break;			
 		}
 		case 0x16:
 		{
-			printf("var[0x%04X] ^= %s", read16u(1), getValueOrVarS(3, currentScriptData[currentScriptPosition + 5], 0x40));
+			printf("var[0x%04X] ^= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
 			currentScriptPosition += 6;
 			break;			
 		}
@@ -425,31 +480,31 @@ int Decoder::decode() {
 		}
 		case 0x19:
 		{
-			printf("var[0x%04X] &= %s", read16u(1), getValueOrVarS(3, currentScriptData[currentScriptPosition + 5], 0x40));
+			printf("var[0x%04X] &= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
 			currentScriptPosition += 6;
 			break;
 		}
 		case 0x1A:
 		{
-			printf("var[0x%04X] |= %s", read16u(1), getValueOrVarS(3, currentScriptData[currentScriptPosition + 5], 0x40));
+			printf("var[0x%04X] |= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
 			currentScriptPosition += 6;
 			break;
 		}
 		case 0x1B:
 		{
-			printf("%s ^= %s", getVarName(read16u(1)), getValueOrVarS(3, currentScriptData[currentScriptPosition + 5], 0x40));
+			printf("%s ^= %s", getVarName(read16u(1)), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
 			currentScriptPosition += 6;
 			break;
 		}
 		case 0x1C:
 		{
-			printf("var[0x%04X] <<= %s", read16u(1), getValueOrVarU(3));
+			printf("var[0x%04X] <<= %s", read16u(1), getVar16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0x1D:
 		{
-			printf("%s >>= %s", getVarName(read16u(1)), getValueOrVarU(3));
+			printf("%s >>= %s", getVarName(read16u(1)), getVar16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
@@ -461,40 +516,40 @@ int Decoder::decode() {
 		}
 		case 0x1F:
 		{
-			printf("var[0x%04X] = rand()%%%s", read16u(1), getValueOrVarU(3));
+			printf("var[0x%04X] = rand()%%%s", read16u(1), getVar16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0x20:
 		{
-			printf("var[0x%04X] *= %s", read16u(1), getValueOrVarS(3, currentScriptData[currentScriptPosition + 5], 0x40));
+			printf("var[0x%04X] *= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
 			currentScriptPosition += 6;
 			break;
 		}
 		case 0x21:
 		{
-			printf("var[0x%04X] /= %s", read16u(1), getValueOrVarS(3, currentScriptData[currentScriptPosition + 5], 0x40));
+			printf("var[0x%04X] /= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
 			currentScriptPosition += 6;
 			break;
 		}
 		case 0x22:
 		{
-			printf("%s = sin(%s, ", getVarName(read16u(1)), getValueOrVarS(3, currentScriptData[currentScriptPosition + 7], 0x40));
-			printf("%s)", getValueOrVarS(5, currentScriptData[currentScriptPosition + 7], 0x20));
+			printf("%s = sin(%s, ", getVarName(read16u(1)), getVar16s(3, currentScriptData[currentScriptPosition + 7], 0x40));
+			printf("%s)", getVar16s(5, currentScriptData[currentScriptPosition + 7], 0x20));
 			currentScriptPosition += 8;
 			break;
 		}
 		case 0x23:
 		{
-			printf("%s = cos(%s, ", getVarName(read16u(1)), getValueOrVarS(3, currentScriptData[currentScriptPosition + 7], 0x40));
-			printf("%s)", getValueOrVarS(5, currentScriptData[currentScriptPosition + 7], 0x20));
+			printf("%s = cos(%s, ", getVarName(read16u(1)), getVar16s(3, currentScriptData[currentScriptPosition + 7], 0x40));
+			printf("%s)", getVar16s(5, currentScriptData[currentScriptPosition + 7], 0x20));
 			currentScriptPosition += 8;
 			break;
 		}
 		case 0x24:
 		{
-			printf("%s = tan(%s, ", getVarName(read16u(1)), getValueOrVarS(3, currentScriptData[currentScriptPosition + 7], 0x40));
-			printf("%s)", getValueOrVarS(5, currentScriptData[currentScriptPosition + 7], 0x20));
+			printf("%s = tan(%s, ", getVarName(read16u(1)), getVar16s(3, currentScriptData[currentScriptPosition + 7], 0x40));
+			printf("%s)", getVar16s(5, currentScriptData[currentScriptPosition + 7], 0x20));
 			currentScriptPosition += 8;
 			break;
 		}
@@ -512,25 +567,25 @@ int Decoder::decode() {
 		}
 		case 0x27:
 		{
-			printf("op27(%s)", getValueOrVarU(1));
+			printf("op27(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
 		case 0x28:
 		{
-			printf("op28(%s)", getValueOrVarU(1));
+			printf("op28(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
 		case 0x29:
 		{
-			printf("op29(%s)", getValueOrVarU(1));
+			printf("op29(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
 		case 0x2A:
 		{
-			printf("op2A(%s)", getValueOrVarS(1, currentScriptData[currentScriptPosition + 3], 0x80));
+			printf("op2A(%s)", getVar16s(1, currentScriptData[currentScriptPosition + 3], 0x80));
 			currentScriptPosition += 4;
 			break;
 		}
@@ -548,7 +603,7 @@ int Decoder::decode() {
 		}
 		case 0x2D:
 		{
-			printf("WAIT(%s)", getValueOrVarU(1));
+			printf("WAIT(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
@@ -566,7 +621,7 @@ int Decoder::decode() {
 		}
 		case 0x30:
 		{
-			printf("SET_ROTATION(%s)", getValueOrVarU(1));
+			printf("SET_ROTATION(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
@@ -574,7 +629,7 @@ int Decoder::decode() {
 		{
 			printf("TURN_TO_DIRECTION(%s", readCharacter(1));
 			printf(", ");
-			printf(getValueOrVarU(2));
+			printf(getVar16u(2));
 			printf(")");
 			currentScriptPosition += 4;
 			break;
@@ -583,7 +638,7 @@ int Decoder::decode() {
 		{
 			printf("op32(%s", readCharacter(1));
 			printf(", ");
-			printf(getValueOrVarU(2));
+			printf(getVar16u(2));
 			printf(")");
 			currentScriptPosition += 4;
 			break;
@@ -646,19 +701,19 @@ int Decoder::decode() {
 		}
 		case 0x3C:
 		{
-			printf("SET_ANIMATION(%s)", getValueOrVarU(1));
+			printf("SET_ANIMATION(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
 		case 0x3D:
 		{
-			printf("SET_WALK_ANIMATION(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getValueOrVarU(2));
+			printf("SET_WALK_ANIMATION(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getVar16u(2));
 			currentScriptPosition += 4;
 			break;
 		}
 		case 0x3E:
 		{
-			printf("op3E(%s)", getValueOrVarU(1));
+			printf("op3E(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
@@ -667,11 +722,11 @@ int Decoder::decode() {
 			if(currentScriptData[currentScriptPosition + 1] == 0)
 			{
 				printf("WALK_TO(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
-				printf(getValueOrVarS(2, currentScriptData[currentScriptPosition + 8], 0x80));
+				printf(getVar16s(2, currentScriptData[currentScriptPosition + 8], 0x80));
 				printf(", ");
-				printf(getValueOrVarS(4, currentScriptData[currentScriptPosition + 8], 0x40));
+				printf(getVar16s(4, currentScriptData[currentScriptPosition + 8], 0x40));
 				printf(", ");
-				printf(getValueOrVarS(6, currentScriptData[currentScriptPosition + 8], 0x20));
+				printf(getVar16s(6, currentScriptData[currentScriptPosition + 8], 0x20));
 				printf(")");
 				currentScriptPosition += 9;
 			}
@@ -687,13 +742,13 @@ int Decoder::decode() {
 			if(currentScriptData[currentScriptPosition + 1] == 0)
 			{
 				printf("WALK_TO_2(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
-				printf(getValueOrVarS(2, currentScriptData[currentScriptPosition + 8], 0x80));
+				printf(getVar16s(2, currentScriptData[currentScriptPosition + 8], 0x80));
 				printf(", ");
-				printf(getValueOrVarS(4, currentScriptData[currentScriptPosition + 8], 0x40));
+				printf(getVar16s(4, currentScriptData[currentScriptPosition + 8], 0x40));
 				printf(", ");
-				printf(getValueOrVarS(6, currentScriptData[currentScriptPosition + 8], 0x20));
+				printf(getVar16s(6, currentScriptData[currentScriptPosition + 8], 0x20));
 				printf(", ");
-				printf(getValueOrVarU(9));
+				printf(getVar16u(9));
 				printf(")");
 				currentScriptPosition += 11;
 			}
@@ -706,7 +761,7 @@ int Decoder::decode() {
 		}
 		case 0x41:
 		{
-			printf("SET_MOVEMENT_SPEED(%s)", getValueOrVarU(1));
+			printf("SET_MOVEMENT_SPEED(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
@@ -715,11 +770,11 @@ int Decoder::decode() {
 			if(currentScriptData[currentScriptPosition + 1] != 1)
 			{
 				printf("WALK_TO_POSITION(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
-				printf(getValueOrVarS(2, currentScriptData[currentScriptPosition + 6], 0x80));
+				printf(getVar16s(2, currentScriptData[currentScriptPosition + 6], 0x80));
 				printf(", ");
-				printf(getValueOrVarS(4, currentScriptData[currentScriptPosition + 6], 0x40));
+				printf(getVar16s(4, currentScriptData[currentScriptPosition + 6], 0x40));
 				printf(", ");
-				printf(getValueOrVarS(6, currentScriptData[currentScriptPosition + 6], 0x20));
+				printf(getVar16s(6, currentScriptData[currentScriptPosition + 6], 0x20));
 				printf(")");
 				currentScriptPosition += 9; // we are missing something here
 			}
@@ -735,11 +790,11 @@ int Decoder::decode() {
 			if(currentScriptData[currentScriptPosition + 1] != 1)
 			{
                 printf("WALK_TO_POSITION_2(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
-                printf(getValueOrVarS(2, currentScriptData[currentScriptPosition + 6], 0x80));
+                printf(getVar16s(2, currentScriptData[currentScriptPosition + 6], 0x80));
                 printf(", ");
-                printf(getValueOrVarS(4, currentScriptData[currentScriptPosition + 6], 0x40));
+                printf(getVar16s(4, currentScriptData[currentScriptPosition + 6], 0x40));
                 printf(", ");
-                printf(getValueOrVarU(7));
+                printf(getVar16u(7));
                 printf(")");
 				currentScriptPosition += 11;
 			}
@@ -775,7 +830,7 @@ int Decoder::decode() {
 				printf("op45(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
 				printf(readCharacter(2));
 				printf(", ");
-				printf(getValueOrVarU(3));
+				printf(getVar16u(3));
 				printf(") //?");
 				currentScriptPosition += 8;
 			}
@@ -784,7 +839,7 @@ int Decoder::decode() {
 				printf("op45(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
 				printf(readCharacter(2));
 				printf(", ");
-				printf(getValueOrVarU(3));
+				printf(getVar16u(3));
 				printf(") //?");
 				currentScriptPosition += 8;
 			}
@@ -801,9 +856,9 @@ int Decoder::decode() {
 			{
 				printf("MOVE(0x%02X", currentScriptData[currentScriptPosition + 1]);
 				printf(", ");
-				printf(getValueOrVarU(2)); // direction
+				printf(getVar16u(2)); // direction
 				printf(", ");
-				printf(getValueOrVarU(4)); // length in frame
+				printf(getVar16u(4)); // length in frame
 				printf(")");
 				currentScriptPosition += 6;
 			}
@@ -846,13 +901,13 @@ int Decoder::decode() {
 			printf("op4C(");
 			printf("0x04X, ", read16u(1));
 			printf(", ");
-			printf(getValueOrVarS(3, currentScriptData[currentScriptPosition + 0xB], 0x40));
+			printf(getVar16s(3, currentScriptData[currentScriptPosition + 0xB], 0x40));
 			printf(", ");
-			printf(getValueOrVarS(5, currentScriptData[currentScriptPosition + 0xB], 0x20));
+			printf(getVar16s(5, currentScriptData[currentScriptPosition + 0xB], 0x20));
 			printf(", ");
-			printf(getValueOrVarS(7, currentScriptData[currentScriptPosition + 0xB], 0x10));
+			printf(getVar16s(7, currentScriptData[currentScriptPosition + 0xB], 0x10));
 			printf(", ");
-			printf(getValueOrVarS(9, currentScriptData[currentScriptPosition + 0xB], 0x08));
+			printf(getVar16s(9, currentScriptData[currentScriptPosition + 0xB], 0x08));
 			printf(")");
 			currentScriptPosition += 0xC;
 			break;
@@ -860,17 +915,17 @@ int Decoder::decode() {
 		case 0x4D:
 		{
 			printf("%s = op4D(", getVarName(read16u(1)));
-			printf(getValueOrVarS(3, currentScriptData[currentScriptPosition + 0xF], 0x40));
+			printf(getVar16s(3, currentScriptData[currentScriptPosition + 0xF], 0x40));
 			printf(", ");
-			printf(getValueOrVarS(5, currentScriptData[currentScriptPosition + 0xF], 0x20));
+			printf(getVar16s(5, currentScriptData[currentScriptPosition + 0xF], 0x20));
 			printf(", ");
-			printf(getValueOrVarS(7, currentScriptData[currentScriptPosition + 0xF], 0x10));
+			printf(getVar16s(7, currentScriptData[currentScriptPosition + 0xF], 0x10));
 			printf(", ");
-			printf(getValueOrVarS(9, currentScriptData[currentScriptPosition + 0xF], 0x08));
+			printf(getVar16s(9, currentScriptData[currentScriptPosition + 0xF], 0x08));
 			printf(", ");
-			printf(getValueOrVarS(11, currentScriptData[currentScriptPosition + 0xF], 0x04));
+			printf(getVar16s(11, currentScriptData[currentScriptPosition + 0xF], 0x04));
 			printf(", ");
-			printf(getValueOrVarS(13, currentScriptData[currentScriptPosition + 0xF], 0x04));
+			printf(getVar16s(13, currentScriptData[currentScriptPosition + 0xF], 0x04));
 			printf(")");
 			currentScriptPosition += 0x10;
 			break;
@@ -934,9 +989,9 @@ int Decoder::decode() {
 		case 0x5A:
 		{
 			printf("SET_NEXT_ROOM(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(")");
 			currentScriptPosition += 5;
 			break;
@@ -947,13 +1002,13 @@ int Decoder::decode() {
 			{
 				printf("op5B(%d", currentScriptData[currentScriptPosition + 1]);
 				printf(", ");
-				printf(getValueOrVarS(2, currentScriptData[currentScriptPosition + 10], 0x80));
+				printf(getVar16s(2, currentScriptData[currentScriptPosition + 10], 0x80));
 				printf(", ");
-				printf(getValueOrVarS(4, currentScriptData[currentScriptPosition + 10], 0x40));
+				printf(getVar16s(4, currentScriptData[currentScriptPosition + 10], 0x40));
 				printf(", ");
-				printf(getValueOrVarS(6, currentScriptData[currentScriptPosition + 10], 0x20));
+				printf(getVar16s(6, currentScriptData[currentScriptPosition + 10], 0x20));
 				printf(", ");
-				printf(getValueOrVarS(8, currentScriptData[currentScriptPosition + 10], 0x10));
+				printf(getVar16s(8, currentScriptData[currentScriptPosition + 10], 0x10));
 				printf(")");
 				currentScriptPosition += 0xb;
 			}
@@ -973,13 +1028,13 @@ int Decoder::decode() {
 				case 2:
 				{
 					printf("JUMP_MOVE(%d, ", currentScriptData[currentScriptPosition + 1] & 3);
-					printf(getValueOrVarS(2, currentScriptData[currentScriptPosition + 8], 0x80));
+					printf(getVar16s(2, currentScriptData[currentScriptPosition + 8], 0x80));
 					printf(", ");
-					printf(getValueOrVarS(4, currentScriptData[currentScriptPosition + 8], 0x40));
+					printf(getVar16s(4, currentScriptData[currentScriptPosition + 8], 0x40));
 					printf(", ");
-					printf(getValueOrVarS(6, currentScriptData[currentScriptPosition + 8], 0x20));
+					printf(getVar16s(6, currentScriptData[currentScriptPosition + 8], 0x20));
 					printf(", ");
-					printf(getValueOrVarU(9));
+					printf(getVar16u(9));
 					printf(")");
 					currentScriptPosition += 0xB;
 					break;
@@ -1007,11 +1062,11 @@ int Decoder::decode() {
 			printf("SET_CAMERA_POSITION(");
 			printf("0x%02X", currentScriptData[currentScriptPosition + 1]);
 			printf(", ");
-			printf(getValueOrVarS(2, currentScriptData[currentScriptPosition + 8], 0x80));
+			printf(getVar16s(2, currentScriptData[currentScriptPosition + 8], 0x80));
 			printf(", ");
-			printf(getValueOrVarS(4, currentScriptData[currentScriptPosition + 8], 0x40));
+			printf(getVar16s(4, currentScriptData[currentScriptPosition + 8], 0x40));
 			printf(", ");
-			printf(getValueOrVarS(6, currentScriptData[currentScriptPosition + 8], 0x20));
+			printf(getVar16s(6, currentScriptData[currentScriptPosition + 8], 0x20));
 			printf(")");
 			currentScriptPosition += 0xb;
 			break;
@@ -1021,7 +1076,7 @@ int Decoder::decode() {
 			if (currentScriptData[currentScriptPosition + 1] == 0)
 			{
 				printf("SET_CAMERA_TO_ACTOR(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
-				printf(getValueOrVarU(2));
+				printf(getVar16u(2));
 				printf(")");
 				currentScriptPosition += 4;
 			}
@@ -1050,22 +1105,12 @@ int Decoder::decode() {
 			{
                 case 0x00:
                 {
-                    /*
-                    if(strcmp("PC0", readCharacter(2)) == 0)
-                    {
-                        //assert(0);
-                        return 4;
-                    }
-                    else
-                    {
-                        */
-                        printf("CAMERA_FOLLOW_CHARACTER(%d, ", currentScriptData[currentScriptPosition + 1]);
-                        printf(readCharacter(2));
-                        printf(", ");
-                        printf(getValueOrVarU(3));
-                        printf(") //? Check PC1 in CD0-373-Temporal Vortex - Confusion Complex");
-                        currentScriptPosition += 5;
-                    //}
+                    printf("CAMERA_FOLLOW_CHARACTER(%d, ", currentScriptData[currentScriptPosition + 1]);
+                    printf(readCharacter(2));
+                    printf(", ");
+                    printf(getVar16u(3));
+                    printf(") //? Check PC1 in CD0-373-Temporal Vortex - Confusion Complex");
+                    currentScriptPosition += 5;
                     break;
                 }
 			    case 0x01:
@@ -1088,28 +1133,28 @@ int Decoder::decode() {
 		case 0x62:
 		{
 			printf("SETUP_DIALOG_WINDOW(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(", ");
-			printf(getValueOrVarU(5));
+			printf(getVar16u(5));
 			printf(", ");
-			printf(getValueOrVarU(7));
+			printf(getVar16u(7));
 			printf(", ");
-			printf(getValueOrVarU(9));
+			printf(getVar16u(9));
 			printf(")");
 			currentScriptPosition += 11;
 			break;
 		}
 		case 0x63:
 		{
-			printf("op63(%s)", getValueOrVarU(1));
+			printf("op63(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
 		case 0x64:
 		{
-			printf("op64(%s)", getValueOrVarS(1, currentScriptData[currentScriptPosition + 3], 0x80));
+			printf("op64(%s)", getVar16s(1, currentScriptData[currentScriptPosition + 3], 0x80));
 			currentScriptPosition += 4;
 			break;
 		}
@@ -1121,7 +1166,7 @@ int Decoder::decode() {
 		}
 		case 0x66:
 		{
-			printf("op66(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getValueOrVarS(2, currentScriptData[currentScriptPosition + 4], 0x80));
+			printf("op66(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getVar16s(2, currentScriptData[currentScriptPosition + 4], 0x80));
 			currentScriptPosition += 5;
 			break;
 		}
@@ -1134,15 +1179,15 @@ int Decoder::decode() {
 		case 0x68:
 		{
 			printf("SET_SCREEN_RGB(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(", ");
-			printf(getValueOrVarU(5));
+			printf(getVar16u(5));
 			printf(", ");
-			printf(getValueOrVarU(7));
+			printf(getVar16u(7));
 			printf(", ");
-			printf(getValueOrVarU(9));
+			printf(getVar16u(9));
 			printf(")");
 			currentScriptPosition += 11;
 			break;
@@ -1150,27 +1195,27 @@ int Decoder::decode() {
 		case 0x69:
 		{
 			unsigned short int jumpOffset = read16u(3);
-			printf("if %s == SCENARIO_FLAG jump 0x%04X", getValueOrVarU(1), jumpOffset);
+			printf("if %s == SCENARIO_FLAG jump 0x%04X", getVar16u(1), jumpOffset);
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0x6A:
 		{
 			unsigned short int jumpOffset = read16u(3);
-			printf("if %s < SCENARIO_FLAG jump 0x%04X", getValueOrVarU(1), jumpOffset);
+			printf("if %s < SCENARIO_FLAG jump 0x%04X", getVar16u(1), jumpOffset);
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0x6B:
 		{
 			unsigned short int jumpOffset = read16u(3);
-			printf("if %s != SCENARIO_FLAG jump 0x%04X", getValueOrVarU(1), jumpOffset);
+			printf("if %s != SCENARIO_FLAG jump 0x%04X", getVar16u(1), jumpOffset);
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0x6C:
 		{
-			printf("SCENARIO_FLAG = %s", getValueOrVarU(1));
+			printf("SCENARIO_FLAG = %s", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
@@ -1189,7 +1234,7 @@ int Decoder::decode() {
 		case 0x6F:
 		{
 			unsigned long int arrayOffset = read16u(1);
-			printf("%s = array_0x%02X[%s]", getVarName(read16u(3)), arrayOffset, getValueOrVarU(5));
+			printf("%s = array_0x%02X[%s]", getVarName(read16u(3)), arrayOffset, getVar16u(5));
 
 			//assert((decompileArray[arrayOffset]._type == TYPE_UNK) || (decompileArray[arrayOffset]._type == TYPE_ARRAY_8));
 			//decompileArray[arrayOffset]._type = TYPE_ARRAY_8;
@@ -1200,7 +1245,7 @@ int Decoder::decode() {
 		case 0x70:
 		{
 			unsigned long int arrayOffset = read16u(1);
-			printf("%s = array_0x%02X[%s] %d", getVarName(read16u(3)), arrayOffset, getValueOrVarU(5), currentScriptData[currentScriptPosition + 7]);
+			printf("%s = array_0x%02X[%s] %d", getVarName(read16u(3)), arrayOffset, getVar16u(5), currentScriptData[currentScriptPosition + 7]);
 
 			//assert((decompileArray[arrayOffset]._type == TYPE_UNK) || (decompileArray[arrayOffset]._type == TYPE_ARRAY_16));
 			//decompileArray[arrayOffset]._type = TYPE_ARRAY_16;
@@ -1210,20 +1255,20 @@ int Decoder::decode() {
 		}
 		case 0x71:
 		{
-			printf( "SET_VAR_BIT(%s)", getValueOrVarS(1, currentScriptData[currentScriptPosition + 3], 0x80));
+			printf( "SET_VAR_BIT(%s)", getVar16s(1, currentScriptData[currentScriptPosition + 3], 0x80));
 			currentScriptPosition += 4;
 			break;
 		}
 		case 0x72:
 		{
-			const char* varBitNumAsString = getValueOrVarS(1, currentScriptData[currentScriptPosition + 3], 0x80);
+			const char* varBitNumAsString = getVar16s(1, currentScriptData[currentScriptPosition + 3], 0x80);
 			printf("CLEAR_VAR_BIT(%s)", varBitNumAsString);
 			currentScriptPosition += 4;
 			break;
 		}
 		case 0x73:
 		{
-            const char* varBitNumAsString = getValueOrVarS(1, currentScriptData[currentScriptPosition + 3], 0x80);
+            const char* varBitNumAsString = getVar16s(1, currentScriptData[currentScriptPosition + 3], 0x80);
             printf("JUMP 0x%04X IF VAR_BIT[%s] CLEAR", read16u(4), varBitNumAsString, 0x80);
 			currentScriptPosition += 6;
 			break;
@@ -1231,7 +1276,7 @@ int Decoder::decode() {
 		case 0x74:
 		{
 			printf("op74(");
-			printf(getValueOrVarS(1, currentScriptData[currentScriptPosition + 3], 0x80));
+			printf(getVar16s(1, currentScriptData[currentScriptPosition + 3], 0x80));
 			printf(", ");
 			printf(readCharacter(4));
 			printf(")");
@@ -1240,13 +1285,13 @@ int Decoder::decode() {
 		}
 		case 0x75:
 		{
-			printf("op75(0x%02X, 0x%02X, %s)", currentScriptData[currentScriptPosition + 1], currentScriptData[currentScriptPosition + 2], getValueOrVarU(3));
+			printf("op75(0x%02X, 0x%02X, %s)", currentScriptData[currentScriptPosition + 1], currentScriptData[currentScriptPosition + 2], getVar16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0x76:
 		{
-			printf("op76(0x%02X, 0x%02X, %s)", currentScriptData[currentScriptPosition + 1], currentScriptData[currentScriptPosition + 2], getValueOrVarU(3));
+			printf("op76(0x%02X, 0x%02X, %s)", currentScriptData[currentScriptPosition + 1], currentScriptData[currentScriptPosition + 2], getVar16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
@@ -1258,7 +1303,7 @@ int Decoder::decode() {
 		}
 		case 0x78:
 		{
-			printf("op78(0x%02X, 0x%02X, %s)", currentScriptData[currentScriptPosition + 1], currentScriptData[currentScriptPosition + 2], getValueOrVarU(3));
+			printf("op78(0x%02X, 0x%02X, %s)", currentScriptData[currentScriptPosition + 1], currentScriptData[currentScriptPosition + 2], getVar16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
@@ -1266,7 +1311,7 @@ int Decoder::decode() {
 		{
 			printf("if op79(%s", readCharacter(1));
 			printf(", ");
-			printf(getValueOrVarU(2));
+			printf(getVar16u(2));
 			printf(") jump 0x%04X", read16u(4));
 			currentScriptPosition += 6;
 			break;
@@ -1276,14 +1321,14 @@ int Decoder::decode() {
 			printf("op7A(");
 			printf(readCharacter(1));
 			printf(", ");
-			printf(getValueOrVarU(2));
+			printf(getVar16u(2));
 			printf(") jump 0x%04X", read16u(4));
 			currentScriptPosition += 6;
 			break;
 		}
 		case 0x7B:
 		{
-			printf("ADD_CHARATER_TO_PARTY(%s)", getValueOrVarU(1));
+			printf("ADD_CHARATER_TO_PARTY(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
@@ -1301,7 +1346,7 @@ int Decoder::decode() {
 		}
 		case 0x7E:
 		{
-			printf("PLAY_MOVIE(%s)", getValueOrVarU(1));
+			printf("PLAY_MOVIE(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
@@ -1313,13 +1358,13 @@ int Decoder::decode() {
 		}
 		case 0x80:
 		{
-			printf("ENABLE_BACKGROUND_LAYER(%s)", getValueOrVarU(1)); // max is 0x1F background layer
+			printf("ENABLE_BACKGROUND_LAYER(%s)", getVar16u(1)); // max is 0x1F background layer
 			currentScriptPosition += 3;
 			break;
 		}
 		case 0x81:
 		{
-			printf("DISABLE_BACKGROUND_LAYER(%s)", getValueOrVarU(1)); // max is 0x1F background layer
+			printf("DISABLE_BACKGROUND_LAYER(%s)", getVar16u(1)); // max is 0x1F background layer
 			currentScriptPosition += 3;
 			break;
 		}
@@ -1328,7 +1373,7 @@ int Decoder::decode() {
 			printf("AXIS_CHARACTER_SCALE(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
 			printf(readCharacter(2));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(")");
 			currentScriptPosition += 5;
 			break;
@@ -1336,13 +1381,13 @@ int Decoder::decode() {
 		case 0x83:
 		{
 			printf("op83(");
-			printf(getValueOrVarS(1, currentScriptData[currentScriptPosition + 9], 0x80));
+			printf(getVar16s(1, currentScriptData[currentScriptPosition + 9], 0x80));
 			printf(", ");
-			printf(getValueOrVarS(3, currentScriptData[currentScriptPosition + 9], 0x40));
+			printf(getVar16s(3, currentScriptData[currentScriptPosition + 9], 0x40));
 			printf(", ");
-			printf(getValueOrVarS(5, currentScriptData[currentScriptPosition + 9], 0x20));
+			printf(getVar16s(5, currentScriptData[currentScriptPosition + 9], 0x20));
 			printf(", ");
-			printf(getValueOrVarS(7, currentScriptData[currentScriptPosition + 9], 0x10));
+			printf(getVar16s(7, currentScriptData[currentScriptPosition + 9], 0x10));
 			printf(")");
 			currentScriptPosition += 10;
 			break;
@@ -1350,23 +1395,23 @@ int Decoder::decode() {
 		case 0x84:
 		{
 			printf("op84(");
-			printf(getValueOrVarS(1, currentScriptData[currentScriptPosition + 0xD], 0x80));
+			printf(getVar16s(1, currentScriptData[currentScriptPosition + 0xD], 0x80));
 			printf(", ");
-			printf(getValueOrVarS(3, currentScriptData[currentScriptPosition + 0xD], 0x40));
+			printf(getVar16s(3, currentScriptData[currentScriptPosition + 0xD], 0x40));
 			printf(", ");
-			printf(getValueOrVarS(5, currentScriptData[currentScriptPosition + 0xD], 0x20));
+			printf(getVar16s(5, currentScriptData[currentScriptPosition + 0xD], 0x20));
 			printf(", ");
-			printf(getValueOrVarS(7, currentScriptData[currentScriptPosition + 0xD], 0x10));
+			printf(getVar16s(7, currentScriptData[currentScriptPosition + 0xD], 0x10));
 			printf(", ");
-			printf(getValueOrVarS(9, currentScriptData[currentScriptPosition + 0xD], 0xF));
+			printf(getVar16s(9, currentScriptData[currentScriptPosition + 0xD], 0xF));
 			printf(", ");
-			printf(getValueOrVarS(0xB, currentScriptData[currentScriptPosition + 0xD], 0xE));
+			printf(getVar16s(0xB, currentScriptData[currentScriptPosition + 0xD], 0xE));
 			printf(", ");
-			printf(getValueOrVarU(0xE));
+			printf(getVar16u(0xE));
 			printf(", ");
-			printf(getValueOrVarU(0x10));
+			printf(getVar16u(0x10));
 			printf(", ");
-			printf(getValueOrVarU(0x12));
+			printf(getVar16u(0x12));
 			printf(", ");
 			printf("0x%02X", currentScriptData[currentScriptPosition + 0x14]);
 			printf(", ");
@@ -1392,24 +1437,24 @@ int Decoder::decode() {
 		case 0x87:
 		{
 			printf("op87(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(", ");
-			printf(getValueOrVarU(5));
+			printf(getVar16u(5));
 			printf(")");
 			currentScriptPosition += 7;
 			break;
 		}
 		case 0x88:
 		{
-			printf("PLAY_SONG(%s)", getValueOrVarU(1));
+			printf("PLAY_SONG(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
 		case 0x89:
 		{
-			printf("op89(%s)", getValueOrVarU(1)); // not using all the bytes...
+			printf("op89(%s)", getVar16u(1)); // not using all the bytes...
 			currentScriptPosition += 5;
 			break;
 		}
@@ -1422,9 +1467,9 @@ int Decoder::decode() {
 		case 0x8B:
 		{
 			printf("op8B(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(")");
 			currentScriptPosition += 5;
 			break;
@@ -1432,9 +1477,9 @@ int Decoder::decode() {
 		case 0x8C:
 		{
 			printf("op8C(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(")");
 			currentScriptPosition += 5;
 			break;
@@ -1454,21 +1499,21 @@ int Decoder::decode() {
 		case 0x8F:
 		{
 			printf("POLYGON(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(", ");
-			printf(getValueOrVarU(5));
+			printf(getVar16u(5));
 			printf(", ");
-			printf(getValueOrVarU(7));
+			printf(getVar16u(7));
 			printf(", ");
-			printf(getValueOrVarU(9));
+			printf(getVar16u(9));
 			printf(", ");
-			printf(getValueOrVarU(0xB));
+			printf(getVar16u(0xB));
 			printf(", ");
-			printf(getValueOrVarU(0xD));
+			printf(getVar16u(0xD));
 			printf(", ");
-			printf(getValueOrVarU(0xF));
+			printf(getVar16u(0xF));
 			printf(")");
 			currentScriptPosition += 0x11;
 			break;
@@ -1479,7 +1524,7 @@ int Decoder::decode() {
 			{
 				case 0:
 				{
-					printf("BG_WAVE_OFF(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getValueOrVarU(2));
+					printf("BG_WAVE_OFF(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getVar16u(2));
 					currentScriptPosition += 4;
 					break;
 				}	
@@ -1525,7 +1570,7 @@ int Decoder::decode() {
 		}
 		case 0x92:
 		{
-			printf("op92(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getValueOrVarU(2));
+			printf("op92(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getVar16u(2));
 			currentScriptPosition += 4;
 			break;
 		}
@@ -1537,45 +1582,45 @@ int Decoder::decode() {
 		}
 		case 0x94:
 		{
-			printf("if Character(%s) not in party, jump 0x%04X", getValueOrVarU(1), read16u(3));
+			printf("if Character(%s) not in party, jump 0x%04X", getVar16u(1), read16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0x95:
 		{
-			printf("if UNKCHECK_Character_op95(%s) jump 0x%04X", getValueOrVarU(1), read16u(3));
+			printf("if UNKCHECK_Character_op95(%s) jump 0x%04X", getVar16u(1), read16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0x96:
 		{
-			printf("ADD_CHARACTER_TO_ROSTER(%s)", getValueOrVarU(1));
+			printf("ADD_CHARACTER_TO_ROSTER(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
 		case 0x97:
 		{
-			printf("REMOVE_CHARACTER_FROM_ROSTER(%s)", getValueOrVarU(1));
+			printf("REMOVE_CHARACTER_FROM_ROSTER(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
 		case 0x98:
 		{
 			printf("%s = FIND_CHARACTER_SLOT_IN_PARTY(", getVarName(read16u(1)));
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(")");
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0x99:
 		{
-			printf("var[0x%04X] = PART_CHARACTER_ID(%s)", read16u(1), getValueOrVarU(3));
+			printf("var[0x%04X] = PART_CHARACTER_ID(%s)", read16u(1), getVar16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0x9A:
 		{
-			printf("op9A(%s, 0x%04X)", getValueOrVarU(1), read16u(3));
+			printf("op9A(%s, 0x%04X)", getVar16u(1), read16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
@@ -1599,7 +1644,7 @@ int Decoder::decode() {
 		}
 		case 0x9E:
 		{
-			printf("SETUP_CURRENT_DIALOG_FACE(%s)", getValueOrVarU(1));
+			printf("SETUP_CURRENT_DIALOG_FACE(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
@@ -1621,11 +1666,11 @@ int Decoder::decode() {
 			printf("CHARACTER_RGB(");
 			printf(readCharacter(1));
 			printf(", ");
-			printf(getValueOrVarU(2));
+			printf(getVar16u(2));
 			printf(", ");
-			printf(getValueOrVarU(4));
+			printf(getVar16u(4));
 			printf(", ");
-			printf(getValueOrVarU(6));
+			printf(getVar16u(6));
 			printf(")");
 			currentScriptPosition += 8;
 			break;
@@ -1635,7 +1680,7 @@ int Decoder::decode() {
 			printf("opA2(");
 			printf(readCharacter(1));
 			printf(", ");
-			printf(getValueOrVarU(2));
+			printf(getVar16u(2));
 			printf(")");
 			currentScriptPosition += 4;
 			break;
@@ -1643,25 +1688,25 @@ int Decoder::decode() {
 		case 0xA3:
 		{
 			printf("BATTLE_opA3(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(", ");
-			printf(getValueOrVarU(5));
+			printf(getVar16u(5));
 			printf(")");
 			currentScriptPosition += 7;
 			break;
 		}
 		case 0xA4:
 		{
-			printf("opA4(%s)", getValueOrVarU(1));
+			printf("opA4(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
 		case 0xA5:
 		{
 			// untested
-			printf("opA5(%s)", getValueOrVarU(1));
+			printf("opA5(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
@@ -1674,20 +1719,20 @@ int Decoder::decode() {
 		case 0xA7:
 		{
 			printf("opA7(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(", ");
-			printf(getValueOrVarU(5));
+			printf(getVar16u(5));
 			printf(", ");
-			printf(getValueOrVarU(7));
+			printf(getVar16u(7));
 			printf(")");
 			currentScriptPosition += 9;
 			break;
 		}
 		case 0xA8:
 		{
-			printf("opA8(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getValueOrVarU(2));
+			printf("opA8(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getVar16u(2));
 			currentScriptPosition += 4;
 			break;
 		}
@@ -1696,7 +1741,7 @@ int Decoder::decode() {
 			printf("opA9(");
 			printf(readCharacter(1));
 			printf(", ");
-			printf(getValueOrVarU(2));
+			printf(getVar16u(2));
 			printf( ")");
 			currentScriptPosition += 4;
 			break;
@@ -1706,7 +1751,7 @@ int Decoder::decode() {
 			printf("SET_AXIS_ROTATION(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
 			printf(readCharacter(2));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(")");
 			currentScriptPosition += 5;
 			break;
@@ -1714,16 +1759,16 @@ int Decoder::decode() {
 		case 0xAB:
 		{
 			printf("opAB(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(")");
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0xAC:
 		{
-			printf("opAC(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getValueOrVarU(2));
+			printf("opAC(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getVar16u(2));
 			currentScriptPosition += 4;
 			break;
 		}
@@ -1742,18 +1787,18 @@ int Decoder::decode() {
 		case 0xAF:
 		{
 			printf("opAF(");
-			printf(getValueOrVarS(1, currentScriptData[currentScriptPosition + 5], 0x80));
+			printf(getVar16s(1, currentScriptData[currentScriptPosition + 5], 0x80));
 			printf(", ");
-			printf(getValueOrVarS(3, currentScriptData[currentScriptPosition + 5], 0x40));
+			printf(getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
 			printf(", ");
-			printf(getValueOrVarU(6));
+			printf(getVar16u(6));
 			printf(")\n");
 			currentScriptPosition += 8;
 			break;
 		}
 		case 0xB0:
 		{
-			printf("opB0(%s)", getValueOrVarS(1, currentScriptData[currentScriptPosition + 3], 0x80));
+			printf("opB0(%s)", getVar16s(1, currentScriptData[currentScriptPosition + 3], 0x80));
 			currentScriptPosition += 4;
 			break;
 		}
@@ -1776,7 +1821,7 @@ int Decoder::decode() {
 			    case 1:
 				{
 					printf("OVERRIDE_FOLLOW(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
-					printf(getValueOrVarU(2));
+					printf(getVar16u(2));
 					printf(")");
                     currentScriptPosition += 4;
                     break;
@@ -1800,13 +1845,13 @@ int Decoder::decode() {
 		}
 		case 0xB4:
 		{
-			printf("IF_HAVE_ITEM(%s) ELSE JUMP 0x%04X", getValueOrVarU(1), read16u(3));
+			printf("IF_HAVE_ITEM(%s) ELSE JUMP 0x%04X", getVar16u(1), read16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0xB5:
 		{
-			printf("opB5(%s)", getValueOrVarU(1));
+			printf("opB5(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
@@ -1818,13 +1863,13 @@ int Decoder::decode() {
 		}
 		case 0xB7:
 		{
-			printf("opB7(%s)", getValueOrVarS(1, currentScriptData[currentScriptPosition + 3], 0x80));
+			printf("opB7(%s)", getVar16s(1, currentScriptData[currentScriptPosition + 3], 0x80));
 			currentScriptPosition += 4;
 			break;
 		}
 		case 0xB8:
 		{
-			printf("opB8(%s) //?", getValueOrVarU(1));
+			printf("opB8(%s) //?", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
@@ -1833,7 +1878,7 @@ int Decoder::decode() {
 			printf("opB9(%d, ", currentScriptData[currentScriptPosition + 1]);
 			printf(readCharacter(2));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(") // missing something");
 			currentScriptPosition += 8;
 			break;
@@ -1844,11 +1889,11 @@ int Decoder::decode() {
             switch(subOpcode) {
                 case 0x00: {
                     printf("opBA%02X(", subOpcode);
-                    printf(getValueOrVarU(2));
+                    printf(getVar16u(2));
                     printf(", ");
-                    printf(getValueOrVarU(4));
+                    printf(getVar16u(4));
                     printf(", ");
-                    printf(getValueOrVarU(6));
+                    printf(getVar16u(6));
                     printf(") //? Setup 3 variables");
                     currentScriptPosition += 8;
                     break;
@@ -1870,7 +1915,7 @@ int Decoder::decode() {
 		}
 		case 0xBB:
 		{
-			printf("RECEIVE_ITEM(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getValueOrVarU(2));
+			printf("RECEIVE_ITEM(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getVar16u(2));
 			currentScriptPosition += 4;
 			break;
 		}
@@ -1882,7 +1927,7 @@ int Decoder::decode() {
 		}
 		case 0xBD:
 		{
-			printf("RECEIVE_MONEY(%d, %s)", currentScriptData[currentScriptPosition + 1], getValueOrVarU(2));
+			printf("RECEIVE_MONEY(%d, %s)", currentScriptData[currentScriptPosition + 1], getVar16u(2));
 			currentScriptPosition += 4;
 			break;
 		}
@@ -1926,7 +1971,7 @@ int Decoder::decode() {
 			else
 			{
 				printf("LOAD_ANIMATION(0x%02X, %s", currentScriptData[currentScriptPosition + 1], readCharacter(2)); 
-				printf(", %s)", getValueOrVarU(3));
+				printf(", %s)", getVar16u(3));
 				currentScriptPosition += 5;
 			}
 			break;
@@ -1934,13 +1979,13 @@ int Decoder::decode() {
 		case 0xC2:
 		{
 			printf("opC2(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(", ");
-			printf(getValueOrVarU(5));
+			printf(getVar16u(5));
 			printf(", ");
-			printf(getValueOrVarU(7));
+			printf(getVar16u(7));
 			printf(")");
 			currentScriptPosition += 9;
 			break;
@@ -1960,11 +2005,11 @@ int Decoder::decode() {
 		case 0xC5:
 		{
 			printf("opC5(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(", ");
-			printf(getValueOrVarU(5));
+			printf(getVar16u(5));
 			printf(")");
 			currentScriptPosition += 7;
 			break;
@@ -1975,20 +2020,20 @@ int Decoder::decode() {
 
 			if(currentScriptData[currentScriptPosition + 1] == 0)
 			{
-				printf(getValueOrVarU(2));
+				printf(getVar16u(2));
 				printf(", ");
-				printf(getValueOrVarU(4));
+				printf(getVar16u(4));
 				currentScriptPosition += 6;
 			}
 			else
 			{
-				printf(getValueOrVarU(2));
+				printf(getVar16u(2));
 				printf(", ");
-				printf(getValueOrVarU(4));
+				printf(getVar16u(4));
 				printf(", ");
-				printf(getValueOrVarU(6));
+				printf(getVar16u(6));
 				printf(", ");
-				printf(getValueOrVarU(8));
+				printf(getVar16u(8));
 				currentScriptPosition += 10;
 			}
 			printf(")");
@@ -1996,24 +2041,24 @@ int Decoder::decode() {
 		}
 		case 0xC7:
 		{
-			printf("opC7(%s)", getValueOrVarU(1));
+			printf("opC7(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
 		case 0xC8:
 		{
 			printf("opC8(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarS(3, currentScriptData[currentScriptPosition + 9], 0x40));
+			printf(getVar16s(3, currentScriptData[currentScriptPosition + 9], 0x40));
 			printf(", ");
-			printf(getValueOrVarS(5, currentScriptData[currentScriptPosition + 9], 0x20));
+			printf(getVar16s(5, currentScriptData[currentScriptPosition + 9], 0x20));
 			printf(", ");
-			printf(getValueOrVarS(7, currentScriptData[currentScriptPosition + 9], 0x10));
+			printf(getVar16s(7, currentScriptData[currentScriptPosition + 9], 0x10));
 			printf(", ");
-			printf(getValueOrVarU(10));
+			printf(getVar16u(10));
 			printf(", ");
-			printf(getValueOrVarU(12));
+			printf(getVar16u(12));
 			printf(")");
 			currentScriptPosition += 14;
 			break;
@@ -2021,11 +2066,11 @@ int Decoder::decode() {
 		case 0xC9:
 		{
 			printf("BATTLE_opC9(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(", ");
-			printf(getValueOrVarU(5));
+			printf(getVar16u(5));
 			printf(")");
 			currentScriptPosition += 7;
 			break;
@@ -2050,13 +2095,13 @@ int Decoder::decode() {
 		}
 		case 0xCD:
 		{
-			printf("opCD(%s) jump 0x%04X", getValueOrVarU(1), read16u(3));
+			printf("opCD(%s) jump 0x%04X", getVar16u(1), read16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0xCE:
 		{
-			printf("opCE(%s, 0x%02X)", getValueOrVarU(1), read16u(3));
+			printf("opCE(%s, 0x%02X)", getVar16u(1), read16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
@@ -2065,7 +2110,7 @@ int Decoder::decode() {
 			printf("opCF(");
 			printf(readCharacter(1));
 			printf(", ");
-			printf(getValueOrVarU(2));
+			printf(getVar16u(2));
 			printf(")");
 			currentScriptPosition += 4;
 			break;
@@ -2078,7 +2123,7 @@ int Decoder::decode() {
 		}
 		case 0xD1:
 		{
-			printf("opD1(%s)", getValueOrVarU(1));
+			printf("opD1(%s)", getVar16u(1));
 			currentScriptPosition += 3;
 			break;
 		}
@@ -2098,16 +2143,16 @@ int Decoder::decode() {
 		case 0xD4:
 		{
 			printf("opD4(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(")");
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0xD5:
 		{
-			printf("var[0x%04X] = NUM_OF_ITEM(%s)", read16u(1), getValueOrVarU(3));
+			printf("var[0x%04X] = NUM_OF_ITEM(%s)", read16u(1), getVar16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
@@ -2116,7 +2161,7 @@ int Decoder::decode() {
 			printf("opD6(");
 			printf(readCharacter(1));
 			printf(", ");
-			printf(getValueOrVarU(2));
+			printf(getVar16u(2));
 			printf(")");
 			currentScriptPosition += 4;
 			break;
@@ -2132,9 +2177,9 @@ int Decoder::decode() {
 			printf("opD8( ");
 			printf(readCharacter(1));
 			printf(", ");
-			printf(getValueOrVarU(2));
+			printf(getVar16u(2));
 			printf(", ");
-			printf(getValueOrVarU(4));
+			printf(getVar16u(4));
 			printf(") jump 0x%04X", read16u(6));
 			currentScriptPosition += 8;
 			break;
@@ -2142,9 +2187,9 @@ int Decoder::decode() {
 		case 0xD9:
 		{
 			printf("SETUP_CHARACTER_MODEL(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(")");
 			currentScriptPosition += 5;
 			break;
@@ -2157,16 +2202,16 @@ int Decoder::decode() {
 		}
 		case 0xDB:
 		{
-			printf("%s = GET_CHARACTER_ID(%s)", getVarName(read16u(3)), getValueOrVarU(1));
+			printf("%s = GET_CHARACTER_ID(%s)", getVarName(read16u(3)), getVar16u(1));
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0xDC:
 		{
 			printf("opDC(");
-			printf(getValueOrVarU(1));
+			printf(getVar16u(1));
 			printf(", ");
-			printf(getValueOrVarU(3));
+			printf(getVar16u(3));
 			printf(")");
 			currentScriptPosition += 5;
 			break;
@@ -2178,7 +2223,7 @@ int Decoder::decode() {
 				case 0:
 				{
 					printf("DATA_READ(%d, ", currentScriptData[currentScriptPosition + 1]);
-					printf(getValueOrVarU(2));
+					printf(getVar16u(2));
 					printf(")");
 					currentScriptPosition += 4;
 					break;
@@ -2195,11 +2240,11 @@ int Decoder::decode() {
 		case 0xDF:
 		{
 			printf("opDF(");
-			printf(getValueOrVarS(1, currentScriptData[currentScriptPosition + 5], 0x80));
+			printf(getVar16s(1, currentScriptData[currentScriptPosition + 5], 0x80));
 			printf(", ");
-			printf(getValueOrVarS(3, currentScriptData[currentScriptPosition + 5], 0x40));
+			printf(getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
 			printf(", ");
-			printf(getValueOrVarU(6));
+			printf(getVar16u(6));
 			printf(") // missing a byte at the end");
 			currentScriptPosition += 9;
 			break;
@@ -2245,13 +2290,13 @@ int Decoder::decode() {
 		}
 		case 0xE5:
 		{
-			printf("if opE5(%s), jump 0x%04X", getValueOrVarU(1), read16u(3));
+			printf("if opE5(%s), jump 0x%04X", getVar16u(1), read16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
 		case 0xE6:
 		{
-			printf("if Character(%s) not recruited, jump 0x%04X", getValueOrVarU(1), read16u(3));
+			printf("if Character(%s) not recruited, jump 0x%04X", getVar16u(1), read16u(3));
 			currentScriptPosition += 5;
 			break;
         }
@@ -2263,7 +2308,7 @@ int Decoder::decode() {
 		}
 		case 0xE9:
 		{
-			printf("if CHECK_FRAME(%s) jump 0x%04X", getValueOrVarU(1), read16u(3));
+			printf("if CHECK_FRAME(%s) jump 0x%04X", getVar16u(1), read16u(3));
 			currentScriptPosition += 5;
 			break;
 		}
@@ -2287,14 +2332,14 @@ int Decoder::decode() {
 				}
 				case 0x02:
 				{
-					printf("opFE02(%s)", getValueOrVarU(1));
+					printf("opFE02(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
 				case 0x03:
 				{
 					printf("opFE03(");
-					printf(getValueOrVarS(2, currentScriptData[currentScriptPosition + 0x4], 0x80));
+					printf(getVar16s(2, currentScriptData[currentScriptPosition + 0x4], 0x80));
 					printf(")");
 					currentScriptPosition += 5;
 					break;
@@ -2307,7 +2352,7 @@ int Decoder::decode() {
 				}
 				case 0x05:
 				{
-					printf("scriptVar1 = %s", getValueOrVarU(1));
+					printf("scriptVar1 = %s", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
@@ -2328,7 +2373,7 @@ int Decoder::decode() {
 					printf("opFE09(");
 					printf(readCharacter(1));
 					printf(", ");
-					printf(getValueOrVarU(2));
+					printf(getVar16u(2));
 					printf(")");
 					currentScriptPosition += 4;
 					break;
@@ -2338,7 +2383,7 @@ int Decoder::decode() {
 					printf("opFE0A(");
 					printf(readCharacter(1));
 					printf(", ");
-					printf(getValueOrVarU(2));
+					printf(getVar16u(2));
 					printf(")");
 					currentScriptPosition += 4;
 					break;
@@ -2351,19 +2396,19 @@ int Decoder::decode() {
 				}
 				case 0x0D:
 				{
-					printf("opFE0D(%s)", getValueOrVarU(1));
+					printf("opFE0D(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
 				case 0x0E:
 				{
-					printf("opFE0E(%s)", getValueOrVarU(1));
+					printf("opFE0E(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
 				case 0x0F:
 				{
-					printf("opFE0F(%s, %s)", readCharacter(1), getValueOrVarU(2));
+					printf("opFE0F(%s, %s)", readCharacter(1), getVar16u(2));
 					currentScriptPosition += 4;
 					break;
 				}
@@ -2375,18 +2420,18 @@ int Decoder::decode() {
 				}
 				case 0x11:
 				{
-					printf("opFE11(%s)", getValueOrVarU(1));
+					printf("opFE11(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
 				case 0x12:
 				{
 					printf("opFE12(");
-					printf(getValueOrVarU(1));
+					printf(getVar16u(1));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(", ");
-					printf(getValueOrVarU(5));
+					printf(getVar16u(5));
 					printf(")");
 					currentScriptPosition += 7;
 					break;
@@ -2394,11 +2439,11 @@ int Decoder::decode() {
                 case 0x13:
 				{
 					printf("opFE13(");
-					printf(getValueOrVarU(1));
+					printf(getVar16u(1));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(", ");
-					printf(getValueOrVarU(5));
+					printf(getVar16u(5));
 					printf(")");
 					currentScriptPosition += 7;
 					break;
@@ -2411,7 +2456,7 @@ int Decoder::decode() {
 				}
 				case 0x15:
 				{
-					printf("opFE15(%s)", getValueOrVarU(1));
+					printf("opFE15(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
@@ -2441,7 +2486,7 @@ int Decoder::decode() {
 				}
 				case 0x1B:
 				{
-					printf("SET_CURRENT_FRAME(%s)", getValueOrVarU(1));
+					printf("SET_CURRENT_FRAME(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
@@ -2454,9 +2499,9 @@ int Decoder::decode() {
 				case 0x1D:
 				{
 					printf("opFE1D(");
-					printf(getValueOrVarU(1));
+					printf(getVar16u(1));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(")");
 					currentScriptPosition += 5;
 					break;
@@ -2464,11 +2509,11 @@ int Decoder::decode() {
 				case 0x21:
 				{
 					printf("op21(");
-					printf(getValueOrVarU(1));
+					printf(getVar16u(1));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(", ");
-					printf(getValueOrVarU(5));
+					printf(getVar16u(5));
 					printf(")");
 					currentScriptPosition += 7;
 					break;
@@ -2476,11 +2521,11 @@ int Decoder::decode() {
 				case 0x22:
 				{
 					printf("CHANGE_FX_VOLUME( ");
-					printf(getValueOrVarU(1));
+					printf(getVar16u(1));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(", ");
-					printf(getValueOrVarU(5));
+					printf(getVar16u(5));
 					printf(")");
 					currentScriptPosition += 7;
 					break;
@@ -2488,11 +2533,11 @@ int Decoder::decode() {
                 case 0x23:
 				{
 					printf("opFE23( ");
-					printf(getValueOrVarU(1));
+					printf(getVar16u(1));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(", ");
-					printf(getValueOrVarU(5));
+					printf(getVar16u(5));
 					printf(")");
 					currentScriptPosition += 7;
 					break;
@@ -2505,7 +2550,7 @@ int Decoder::decode() {
 				}
 				case 0x29:
 				{
-					printf("op29(%s)", getValueOrVarU(1));
+					printf("op29(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
@@ -2517,7 +2562,7 @@ int Decoder::decode() {
 				}
 				case 0x2B:
 				{
-					printf("opFE2B(%d, %s)", currentScriptData[currentScriptPosition + 1], getValueOrVarU(2));
+					printf("opFE2B(%d, %s)", currentScriptData[currentScriptPosition + 1], getVar16u(2));
 					currentScriptPosition += 4;
 					break;
 				}
@@ -2529,7 +2574,7 @@ int Decoder::decode() {
 				}
 				case 0x2D:
 				{
-					printf("opFE2D(%s)", getValueOrVarU(1));
+					printf("opFE2D(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
@@ -2572,28 +2617,28 @@ int Decoder::decode() {
 				case 0x34:
 				{
 					printf("opFE34(");
-					printf(getValueOrVarS(1, currentScriptData[currentScriptPosition + 0xB], 0x80));
+					printf(getVar16s(1, currentScriptData[currentScriptPosition + 0xB], 0x80));
 					printf(", ");
-					printf(getValueOrVarS(3, currentScriptData[currentScriptPosition + 0xB], 0x40));
+					printf(getVar16s(3, currentScriptData[currentScriptPosition + 0xB], 0x40));
 					printf(", ");
-					printf(getValueOrVarS(5, currentScriptData[currentScriptPosition + 0xB], 0x20));
+					printf(getVar16s(5, currentScriptData[currentScriptPosition + 0xB], 0x20));
 					printf(", ");
-					printf(getValueOrVarS(7, currentScriptData[currentScriptPosition + 0xB], 0x10));
+					printf(getVar16s(7, currentScriptData[currentScriptPosition + 0xB], 0x10));
 					printf(", ");
-					printf(getValueOrVarS(9, currentScriptData[currentScriptPosition + 0xB], 0x08));
+					printf(getVar16s(9, currentScriptData[currentScriptPosition + 0xB], 0x08));
 					printf(")");
 					currentScriptPosition += 0xC;
 					break;
 				}
 				case 0x35:
 				{
-					printf("opFE35(%s)", getValueOrVarS(1, currentScriptData[currentScriptPosition + 3], 0x80));
+					printf("opFE35(%s)", getVar16s(1, currentScriptData[currentScriptPosition + 3], 0x80));
 					currentScriptPosition += 4;
 					break;
 				}
 				case 0x36:
 				{
-					printf("HEAL_GROUP(%s)", getValueOrVarU(1));
+					printf("HEAL_GROUP(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
@@ -2602,7 +2647,7 @@ int Decoder::decode() {
 					printf("opFE37(");
 					printf("0x%02X", read16u(1));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(")");
 					currentScriptPosition += 5;
 					break;
@@ -2610,9 +2655,9 @@ int Decoder::decode() {
 				case 0x38:
 				{
 					printf("OPTIONAL_LIFE(");
-					printf(getValueOrVarS(1, currentScriptData[currentScriptPosition + 5], 0x80));
+					printf(getVar16s(1, currentScriptData[currentScriptPosition + 5], 0x80));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(")");
 					currentScriptPosition += 6;
 					break;
@@ -2620,9 +2665,9 @@ int Decoder::decode() {
 				case 0x3A:
 				{
 					printf("opFE3A(");
-					printf(getValueOrVarS(1, currentScriptData[currentScriptPosition + 5], 0x80));
+					printf(getVar16s(1, currentScriptData[currentScriptPosition + 5], 0x80));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(")");
 					currentScriptPosition += 6;
 					break;
@@ -2630,9 +2675,9 @@ int Decoder::decode() {
                 case 0x3B:
 				{
 					printf("opFE3B(");
-					printf(getValueOrVarU(1));
+					printf(getVar16u(1));
 					printf(", Character(");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf("))");
 					currentScriptPosition += 5;
 					break;
@@ -2646,9 +2691,9 @@ int Decoder::decode() {
 				case 0x3D:
 				{
 					printf("CURE_STATUS_AILEMENT(");
-					printf(getValueOrVarU(1));
+					printf(getVar16u(1));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(")");
 					// 1 = POISON
 					// 8 = BURNS
@@ -2659,9 +2704,9 @@ int Decoder::decode() {
 				}
 				case 0x3E:
 				{
-					printf("CURE_ALL_STATUS_AILEMENT(%s", getValueOrVarU(1));
+					printf("CURE_ALL_STATUS_AILEMENT(%s", getVar16u(1));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(")");
 					currentScriptPosition += 5;
 					break;
@@ -2674,7 +2719,7 @@ int Decoder::decode() {
 				}
 				case 0x40:
 				{
-					printf("opFE40(%s)", getValueOrVarU(1));
+					printf("opFE40(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
                 }
@@ -2694,9 +2739,9 @@ int Decoder::decode() {
                 case 0x43:
 				{
 					printf("opFE43(");
-					printf(getValueOrVarU(1));
+					printf(getVar16u(1));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(")");
 					currentScriptPosition += 5;
 					break;
@@ -2732,11 +2777,11 @@ int Decoder::decode() {
 				case 0x46:
 				{
 					printf("opFE46(");
-					printf(getValueOrVarS(1, currentScriptData[currentScriptPosition + 7], 0x80));
+					printf(getVar16s(1, currentScriptData[currentScriptPosition + 7], 0x80));
 					printf(", ");
-					printf(getValueOrVarS(3, currentScriptData[currentScriptPosition + 7], 0x40));
+					printf(getVar16s(3, currentScriptData[currentScriptPosition + 7], 0x40));
 					printf(", ");
-					printf(getValueOrVarS(5, currentScriptData[currentScriptPosition + 7], 0x20));
+					printf(getVar16s(5, currentScriptData[currentScriptPosition + 7], 0x20));
 					printf(")");
 					currentScriptPosition += 8;
 					break;
@@ -2744,11 +2789,11 @@ int Decoder::decode() {
 				case 0x47:
 				{
 					printf("opFE47(");
-					printf(getValueOrVarS(1, currentScriptData[currentScriptPosition + 7], 0x80));
+					printf(getVar16s(1, currentScriptData[currentScriptPosition + 7], 0x80));
 					printf(", ");
-					printf(getValueOrVarS(3, currentScriptData[currentScriptPosition + 7], 0x40));
+					printf(getVar16s(3, currentScriptData[currentScriptPosition + 7], 0x40));
 					printf(", ");
-					printf(getValueOrVarS(5, currentScriptData[currentScriptPosition + 7], 0x20));
+					printf(getVar16s(5, currentScriptData[currentScriptPosition + 7], 0x20));
 					printf(")");
 					currentScriptPosition += 8;
 					break;
@@ -2756,7 +2801,7 @@ int Decoder::decode() {
 				case 0x48:
 				{
 					printf("opFE48(");
-					printf(getValueOrVarU(2));
+					printf(getVar16u(2));
 					printf(", ");
 					printf("0x%02X", read16u(4));
 					printf(", ");
@@ -2770,16 +2815,16 @@ int Decoder::decode() {
 				case 0x49:
 				{
 					printf("op49(");
-					printf(getValueOrVarS(1, currentScriptData[currentScriptPosition + 5], 0x80));
+					printf(getVar16s(1, currentScriptData[currentScriptPosition + 5], 0x80));
 					printf(", ");
-					printf(getValueOrVarS(3, currentScriptData[currentScriptPosition + 5], 0x40));
+					printf(getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
 					printf(")");
 					currentScriptPosition += 6;
 					break;
 				}
 				case 0x4A:
 				{
-					printf("RENAME_CHARACTER(%s)", getValueOrVarU(1));
+					printf("RENAME_CHARACTER(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
@@ -2803,7 +2848,7 @@ int Decoder::decode() {
 				}
 				case 0x4F:
 				{
-					printf("opFE4F(%d, %s)", currentScriptData[currentScriptPosition + 1], getValueOrVarU(2));
+					printf("opFE4F(%d, %s)", currentScriptData[currentScriptPosition + 1], getVar16u(2));
 					currentScriptPosition += 4;
 					break;
 				}
@@ -2815,16 +2860,16 @@ int Decoder::decode() {
 				}
 				case 0x52:
 				{
-					printf("opFE52(%s)", getValueOrVarU(1));
+					printf("opFE52(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
 				case 0x53:
 				{
 					printf("SET_CHARACTER_HEAD_ANGLE(");
-					printf(getValueOrVarS(1, currentScriptData[currentScriptPosition + 5], 0x80));
+					printf(getVar16s(1, currentScriptData[currentScriptPosition + 5], 0x80));
 					printf(", ");
-					printf(getValueOrVarS(3, currentScriptData[currentScriptPosition + 5], 0x40));
+					printf(getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
 					printf(", ");
 					printf(readCharacter(6));
 					printf(")");
@@ -2851,7 +2896,7 @@ int Decoder::decode() {
 				{
 					printf("opFE57(0x%02X", currentScriptData[currentScriptPosition + 1]);
 					printf(", ");
-					printf(getValueOrVarU(2));
+					printf(getVar16u(2));
 					printf(", ");
 					printf("0x%02X", currentScriptData[currentScriptPosition + 4]);
 					printf(") //?");
@@ -2882,7 +2927,7 @@ int Decoder::decode() {
 					printf("0x%02X, ", currentScriptData[currentScriptPosition + 1]);
 					printf(readCharacter(2));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(")");
 					currentScriptPosition += 5;
 					break;
@@ -2892,14 +2937,14 @@ int Decoder::decode() {
 					printf("opFE5D(");
 					printf(readCharacter(1));
 					printf(", ");
-					printf(getValueOrVarU(2));
+					printf(getVar16u(2));
 					printf(")");
 					currentScriptPosition += 4;
 					break;
 				}
 				case 0x5E:
 				{
-					printf("SETUP_ELEMENT_SHOP(%s)", getValueOrVarU(1));
+					printf("SETUP_ELEMENT_SHOP(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
                 }
@@ -2908,7 +2953,7 @@ int Decoder::decode() {
 					printf("opFE60(");
 					printf(readCharacter(1));
 					printf(", ");
-					printf(getValueOrVarU(2));
+					printf(getVar16u(2));
 					printf(")");
 					currentScriptPosition += 4;
 					break;
@@ -2924,7 +2969,7 @@ int Decoder::decode() {
 					printf("SET_CHARACTER_HEAD_SPEED(");
 					printf(readCharacter(1));
 					printf(", ");
-					printf(getValueOrVarU(2));
+					printf(getVar16u(2));
 					printf(")");
 					currentScriptPosition += 4;
 					break;
@@ -2946,7 +2991,7 @@ int Decoder::decode() {
 					if(currentScriptData[currentScriptPosition + 1] == 0)
 					{
 						printf("CHANGE_DISC(%d, ", currentScriptData[currentScriptPosition + 1]);
-						printf(getValueOrVarU(2));
+						printf(getVar16u(2));
 						printf(")");
 						currentScriptPosition += 4;
 					}
@@ -2966,13 +3011,13 @@ int Decoder::decode() {
 				}
 				case 0x67:
 				{
-					printf("opFE67(%s)", getValueOrVarU(1));
+					printf("opFE67(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
 				case 0x68:
 				{
-					printf("SETUP_WEAPON_SHOP(%s)", getValueOrVarU(1));
+					printf("SETUP_WEAPON_SHOP(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
                 }
@@ -3032,10 +3077,10 @@ int Decoder::decode() {
 				}
 				case 0x73:
 				{
-					const char* limitIdAsString = getValueOrVarU(3);
+					const char* limitIdAsString = getVar16u(3);
 
 					printf("LEARN_CHARACTER_LIMIT_2(");
-					printf(getValueOrVarU(1));
+					printf(getVar16u(1));
 					printf(", ");
 					printf(limitIdAsString);
 					printf(")");
@@ -3044,10 +3089,10 @@ int Decoder::decode() {
 				}
 				case 0x74:
 				{
-					const char* limitIdAsString = getValueOrVarU(3);
+					const char* limitIdAsString = getVar16u(3);
 
 					printf("LEARN_CHARACTER_LIMIT_1(");
-					printf(getValueOrVarU(1));
+					printf(getVar16u(1));
 					printf(", ");
 					printf(limitIdAsString);
 					printf(")");
@@ -3056,7 +3101,7 @@ int Decoder::decode() {
                 }
                 case 0x75:  
 				{
-					printf("opFE75(%s) //? SETUP_GRANDSLAM_SCREEN", getValueOrVarU(1));
+					printf("opFE75(%s) //? SETUP_GRANDSLAM_SCREEN", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
@@ -3075,19 +3120,19 @@ int Decoder::decode() {
 				case 0x78:
 				{
 					printf("opFE78(");
-					printf(getValueOrVarU(1));
+					printf(getVar16u(1));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(") // this will stall the script until some condition is met");
 					currentScriptPosition += 5;
 					break;
 				}
 				case 0x79:
 				{
-					const char* limitIdAsString = getValueOrVarU(3);
+					const char* limitIdAsString = getVar16u(3);
 
 					printf("LEARN_CHARACTER_LIMIT_0(");
-					printf(getValueOrVarU(1));
+					printf(getVar16u(1));
 					printf(", ");
 					printf(limitIdAsString);
 					printf(")");
@@ -3096,29 +3141,29 @@ int Decoder::decode() {
 				}
 				case 0x7A:
 				{
-					printf("ADD_FRAME_TO_COLLECTION(%s)", getValueOrVarU(1));
+					printf("ADD_FRAME_TO_COLLECTION(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
 				case 0x7B:
 				{
-					printf("TOGGLE_CHARACTER_LIMIT_MODE(%s)", getValueOrVarU(1));
+					printf("TOGGLE_CHARACTER_LIMIT_MODE(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
                 }
                 case 0x7C:
                 {
                     printf("opFE7C(");
-					printf(getValueOrVarU(1));
+					printf(getVar16u(1));
 					printf(", ");
-					printf(getValueOrVarU(3));
+					printf(getVar16u(3));
 					printf(") // Operation with two variables");
 					currentScriptPosition += 5;
 					break;
                 }
                 case 0x7D:
 				{
-					printf("opFE7D(%s)", getValueOrVarU(1));
+					printf("opFE7D(%s)", getVar16u(1));
 					currentScriptPosition += 3;
 					break;
 				}
@@ -3175,13 +3220,5 @@ int Decoder::decode() {
 			break;
 		}
 	}
-	int code_length = pos - pre_pos;
-	fflush(stdout);
-	printf("\n{");
-	for (int i = 0; i < code_length; i++) {
-		printf("%02X ", script[pre_pos + i]);
-	}
-	printf("}\n");
-	fflush(stdout);
-	return ret_code;
+    */
 }
