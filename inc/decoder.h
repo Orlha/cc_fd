@@ -14,13 +14,13 @@ class Decoder {
     	int * position;
     	unsigned char * script;
         char tempBuffer[20];
-        vector<int> jumps;
+        vector<unsigned int> jumps;
     	
 
     public:
         Decoder(unsigned char * script_data, int * offset);
         
-        vector<int> * getJumps();
+        vector<unsigned int> * getJumps();
 
     	int decode();
     	unsigned short int read16u(int idx);

@@ -22,7 +22,7 @@ class Reader {
 		
 		Entity * entity;
         Decoder * decoder;
-        vector<int> * jumps;
+        vector<unsigned int> * jumps;
         
         bool atEntity();
         bool atJump();

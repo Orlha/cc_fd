@@ -6,7 +6,7 @@ Decoder::Decoder(unsigned char * script_data, int * offset) {
 	script_begin = * position;
 }
 
-vector<int> * Decoder::getJumps() {
+vector<unsigned int> * Decoder::getJumps() {
     return &jumps;
 }
 
@@ -183,7 +183,82 @@ int Decoder::decode() {
 		}
 		case 0x02:
 		{
-			printf("IF_JUMP(TODO)");
+			unsigned char flag = currentScriptData[currentScriptPosition + 5];
+
+			char value1[256];
+			char value2[256];
+
+            unsigned short int jumpOffset = read16u(6);
+            
+            jumps.push_back(jumpOffset);
+
+			if(flag & 0x80)
+			{
+				sprintf(value1, "%d", read16s(1));
+			}
+			else
+			{
+				strcpy(value1, getValueOrVarU(1));
+			}
+
+			if(flag & 0x40)
+			{
+				sprintf(value2, "%d", read16s(3));
+			}
+			else
+			{
+				strcpy(value2, getValueOrVarU(3));
+			}
+
+            /*
+			if(strcmp(value1, "USED_KEY_ITEM") == 0)
+			{
+				if(flag & 0x40)
+				{
+					sprintf(value2, "\"%s\"", GetItemName(readU16FromScript(3)));
+				}
+            }
+            */
+
+			switch(flag & 0xF)
+			{
+			case 0x0:
+                printf("IF_JUMP(%s == %s, 0x%04X)", value1, value2, jumpOffset);
+				break;
+			case 0x1:
+                printf("IF_JUMP(%s != %s, 0x%04X)", value1, value2, jumpOffset);
+				break;
+			case 0x2:
+                printf("IF_JUMP(%s > %s, 0x%04X)", value1, value2, jumpOffset);
+				break;
+			case 0x3:
+                printf("IF_JUMP(%s < %s, 0x%04X)", value1, value2, jumpOffset);
+				break;
+			case 0x4:
+                printf("IF_JUMP(%s >= %s, 0x%04X)", value1, value2, jumpOffset);
+				break;
+			case 0x5:
+                printf("IF_JUMP(%s <= %s, 0x%04X)", value1, value2, jumpOffset);
+				break;
+			case 0x6:
+                printf("IF_JUMP(%s & %s, 0x%04X)", value1, value2, jumpOffset);
+				break;
+			case 0x7:
+                printf("IF_JUMP(%s != %s, 0x%04X)", value1, value2, jumpOffset);
+				break;
+			case 0x8:
+                printf("IF_JUMP(%s | %s, 0x%04X)", value1, value2, jumpOffset);
+				break;
+			case 0x9:
+                printf("IF_JUMP(%s & %s, 0x%04X)", value1, value2, jumpOffset);
+				break;
+			case 0xA:
+                printf("IF_JUMP(%s ~ %s, 0x%04X)", value1, value2, jumpOffset);
+				break;
+			default:
+                printf("IF_JUMP(ALWAYS, 0x%04X) //? most probably a decompiler bug", value1, value2, jumpOffset);
+				break;
+			}
 			currentScriptPosition += 8;
 			break;
 		}

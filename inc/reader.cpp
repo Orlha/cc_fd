@@ -35,7 +35,7 @@ bool Reader::atEntity() {
     return ret_code;
 }
 bool Reader::atJump() {
-    for(vector<int>::iterator it = jumps->begin(); it != jumps->end(); ++it) {
+    for(vector<unsigned int>::iterator it = jumps->begin(); it != jumps->end(); ++it) {
         int value = * it;
         if (value == pos - rel_pos) {
             return true;
