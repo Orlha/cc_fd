@@ -181,20 +181,19 @@ int Decoder::decode() {
 	
     int pre_pos = * position;
 
-
+    /*
     (this->*switch_map[0x00])();
     printf("0x%02X\n", getOpcodeLength(0x00));
+    */
 
-
+    /*
     if (code == 0x00) {
         (this->*switch_map[0x00])();
     } else {
         return 4;
     }
+    */
     
-
-    
-
 	switch(code)
 	{
 		case 0x00: {
