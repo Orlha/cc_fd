@@ -133,8 +133,8 @@ int Reader::decompile() {
         }
 
         
-		int result = decoder->decode();
-		
+        int result = decoder->decode();
+        
 		// succesfully decoded:
 		if (result == 0) {
 			continue;
@@ -143,7 +143,11 @@ int Reader::decompile() {
 		// unknown opcode or parameter error:
 		if (result == 4) {
 			return result;
-		}
+        }
+        
+        if (atJump()) {
+            continue;
+        }
 		
 		// returned from STOP { 00}:
 		if (result == 1) {
