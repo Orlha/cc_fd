@@ -1049,7 +1049,9 @@ int Decoder::decode() {
                 default:
                 {
                     //assert(0);
-                    return 4;
+                    printf("CAMERA_FOLLOW_CHARACTER() //? Unrecognized argument, unable to determine length");
+                    currentScriptPosition += 0x2;
+					ret_code = 4;
                     break;
                 }
 			}
@@ -1449,7 +1451,7 @@ int Decoder::decode() {
 			{
 				case 0:
 				{
-					printf("BG_WAVE_OFF( 0x%02X, %s )", currentScriptData[currentScriptPosition + 1], getValueOrVarU(2));
+					printf("BG_WAVE_OFF(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getValueOrVarU(2));
 					currentScriptPosition += 4;
 					break;
 				}	
@@ -1457,12 +1459,16 @@ int Decoder::decode() {
 				case 2:
 				case 3:
 
-					printf("BG_WAVE_OFF( 0x%02X )", currentScriptData[currentScriptPosition + 1]);
+					printf("BG_WAVE_OFF(0x%02X)", currentScriptData[currentScriptPosition + 1]);
 					currentScriptPosition += 2;
 					break;
-				default:
-					//assert(0);
-					return 4;
+                default:
+                {
+                    //assert(0);
+                    printf("BG_WAVE_OFF() //? Unrecognized argument, unable to determine length");
+                    ret_code = 4;
+                    currentScriptPosition += 2;
+                }
 			}
 			break;
 		}
@@ -1480,9 +1486,11 @@ int Decoder::decode() {
 				}
 				default:
 				{
-					printf("op91(0x%02X) UNKNOWN - CHECK", param);
-					//assert(0);
-					return 4;
+                    //assert(0);
+                    printf("op91(0x%02X) //? Unrecognized argument, unable to determine length", param);
+                    currentScriptPosition += 2;
+                    ret_code = 4;
+                    break;
 				}
 			}
 			break;
@@ -1748,7 +1756,10 @@ int Decoder::decode() {
                 default:
                 {
                     //assert(0);
-                    return 4;
+                    printf("OVERRIDE_FOLLOW() //? Unrecognized argument, unable to determine length");
+                    currentScriptPosition += 2;
+                    ret_code = 4;
+                    break;
                 }
 			}
 			break;
@@ -1801,30 +1812,32 @@ int Decoder::decode() {
 		}
 		case 0xBA:
 		{
-			int subOpcode = currentScriptData[currentScriptPosition + 1];
-			if (subOpcode == 0)
-			{
-				printf("opBA00(");
-				printf(getValueOrVarU(2));
-				printf(", ");
-				printf(getValueOrVarU(4));
-				printf(", ");
-				printf(getValueOrVarU(6));
-				printf(") // ??");
-				currentScriptPosition += 8;
-			}
-			else if (subOpcode == 1)
-			{
-				printf("opBA01(");
-				printf(")");
-				currentScriptPosition += 2;
-			}
-			else {
-				printf("FATAL: Unknown opcode 0xBA 0x%02X", subOpcode);
-				currentScriptPosition += 2;
-				return 4;
-				break;
-			}
+            int subOpcode = currentScriptData[currentScriptPosition + 1];
+            switch(subOpcode) {
+                case 0x00: {
+                    printf("opBA%02X(", subOpcode);
+                    printf(getValueOrVarU(2));
+                    printf(", ");
+                    printf(getValueOrVarU(4));
+                    printf(", ");
+                    printf(getValueOrVarU(6));
+                    printf(") //? Setup 3 variables");
+                    currentScriptPosition += 8;
+                    break;
+                }
+                case 0x01: {
+                    printf("opBA%02X(", subOpcode);
+                    printf(")");
+                    currentScriptPosition += 2;
+                    break;
+                }
+                default: {
+                    printf("opBA%02X() //? Unrecognized argument, unable to determine length", subOpcode);
+                    currentScriptPosition += 2;
+                    ret_code = 4;
+                    break;
+                }
+            }
 			break;
 		}
 		case 0xBB:
@@ -3119,9 +3132,9 @@ int Decoder::decode() {
 				}
 				default:
 				{
-					printf("FATAL: Unknown opcode 0xFE 0x%02X\n", subOpcode);
-					currentScriptPosition += 1;
-					return 4;
+					printf("FATAL: Unknown opcode 0xFE0x%02X\n", subOpcode);
+                    currentScriptPosition += 1;
+                    ret_code = 4;
 					break;
 				}
 			}
@@ -3130,7 +3143,7 @@ int Decoder::decode() {
 		default: {
 			printf("FATAL: Unknown opcode 0x%02X\n", code);
 			currentScriptPosition += 1;
-			return 4;
+			ret_code = 4;
 			break;
 		}
 	}
