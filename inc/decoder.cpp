@@ -1,5 +1,7 @@
 #include "decoder.h"
 
+#define MAKESWITCH( f ) switch_map[f] = &Decoder::op##f
+
 Decoder::Decoder(unsigned char * script_data, int * offset) {
 	script = script_data;
 	position = offset;
@@ -10,6 +12,7 @@ Decoder::Decoder(unsigned char * script_data, int * offset) {
 }
 
 void Decoder::initMap() {
+    /*
     switch_map[0x00] = &Decoder::op0x00;
     switch_map[0x01] = &Decoder::op0x01;
     switch_map[0x02] = &Decoder::op0x02;
@@ -42,6 +45,39 @@ void Decoder::initMap() {
     switch_map[0x1D] = &Decoder::op0x1D;
     switch_map[0x1E] = &Decoder::op0x1E;
     switch_map[0x1F] = &Decoder::op0x1F;
+    */
+    MAKESWITCH(0x00);
+    MAKESWITCH(0x01);
+    MAKESWITCH(0x02);
+    MAKESWITCH(0x03);
+    MAKESWITCH(0x04);
+    MAKESWITCH(0x05);
+    MAKESWITCH(0x06);
+    MAKESWITCH(0x07);
+    MAKESWITCH(0x08);
+    MAKESWITCH(0x09);
+    MAKESWITCH(0x0A);
+    MAKESWITCH(0x0B);
+    MAKESWITCH(0x0C);
+    MAKESWITCH(0x0D);
+    MAKESWITCH(0x0E);
+    MAKESWITCH(0x0F);
+    MAKESWITCH(0x10);
+    MAKESWITCH(0x11);
+    MAKESWITCH(0x12);
+    MAKESWITCH(0x13);
+    MAKESWITCH(0x14);
+    MAKESWITCH(0x15);
+    MAKESWITCH(0x16);
+    MAKESWITCH(0x17);
+    MAKESWITCH(0x18);
+    MAKESWITCH(0x19);
+    MAKESWITCH(0x1A);
+    MAKESWITCH(0x1B);
+    MAKESWITCH(0x1C);
+    MAKESWITCH(0x1D);
+    MAKESWITCH(0x1E);
+    MAKESWITCH(0x1F);
     return;
 }
 
@@ -393,14 +429,11 @@ int Decoder::decode() {
 	printf("0x%04x: ", pos - script_begin);
 	int code = script[pos];	
     int pre_pos = * position;
-
-    //(this->*switch_map[0x00])();
-    //printf("0x%02X\n", getOpcodeLength(0x00));
-    
+   
     int code_length = 0;
     ret_code = 0;
 
-    code = 0x10;
+    code = 0x11;
     memset(&descBuffer[0], 0, sizeof(descBuffer));
     auto search = switch_map.find(code);
     if(search != switch_map.end()) {
@@ -424,102 +457,9 @@ int Decoder::decode() {
 	fflush(stdout);
 	return ret_code;
 
-    //printf("%d\n", ret_code);
-    //return 4;
-
     /*
 	switch(code)
 	{
-		case 0x11:
-		{
-			printf("var[%04X] = true", read16u(1));
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x12:
-		{
-			printf("var[0x%04X] = false", read16u(1));
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x13:
-		{
-			printf("var[0x%04X] += %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
-			currentScriptPosition += 6;
-			break;			
-		}
-		case 0x14:
-		{
-			printf("var[0x%04X] -= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
-			currentScriptPosition += 6;
-			break;			
-		}
-		case 0x15:
-		{
-			printf("var[0x%04X] |= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
-			currentScriptPosition += 6;
-			break;			
-		}
-		case 0x16:
-		{
-			printf("var[0x%04X] ^= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
-			currentScriptPosition += 6;
-			break;			
-		}
-		case 0x17:
-		{
-			printf("var[0x%04X]++", read16u(1));
-			currentScriptPosition += 3;
-			break;			
-		}
-		case 0x18:
-		{
-			printf("var[0x%04X]--", read16u(1));
-			currentScriptPosition += 3;
-			break;			
-		}
-		case 0x19:
-		{
-			printf("var[0x%04X] &= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
-			currentScriptPosition += 6;
-			break;
-		}
-		case 0x1A:
-		{
-			printf("var[0x%04X] |= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
-			currentScriptPosition += 6;
-			break;
-		}
-		case 0x1B:
-		{
-			printf("%s ^= %s", getVarName(read16u(1)), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
-			currentScriptPosition += 6;
-			break;
-		}
-		case 0x1C:
-		{
-			printf("var[0x%04X] <<= %s", read16u(1), getVar16u(3));
-			currentScriptPosition += 5;
-			break;
-		}
-		case 0x1D:
-		{
-			printf("%s >>= %s", getVarName(read16u(1)), getVar16u(3));
-			currentScriptPosition += 5;
-			break;
-		}
-		case 0x1E:
-		{
-			printf("var[0x%04X] = rand()", read16u(1));
-			currentScriptPosition += 3;
-			break;	
-		}
-		case 0x1F:
-		{
-			printf("var[0x%04X] = rand()%%%s", read16u(1), getVar16u(3));
-			currentScriptPosition += 5;
-			break;
-		}
 		case 0x20:
 		{
 			printf("var[0x%04X] *= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));

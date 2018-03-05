@@ -1,11 +1,12 @@
 #ifndef decoder_h
 #define decoder_h
 
+#include <stdlib.h>
 #include <fstream>
 #include <cstring>
-#include <stdlib.h>
 #include <vector>
 #include <map>
+#include <string>
 
 #include "constants.h"
 
