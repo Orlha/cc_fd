@@ -20,11 +20,13 @@ Decoder::Decoder(unsigned char * script_data, int * offset) {
 }
 
 void Decoder::initMap() {
-    for (int index = 0; index <= 0x1F; ++index) {
+    for (int index = 0; index <= 0x3F; ++index) {
         char funcName[10];
         sprintf(funcName, "op0x%02X", index);
-        switch_map[index] = (opFunc)dlsym(lib, funcName);
+        switch_map[index] = (intFunc)dlsym(lib, funcName);
     }
+    getBuffer = (charFunc)dlsym(lib, "getBuffer");
+    buffer = getBuffer();
     return;
 }
 
@@ -38,26 +40,24 @@ int Decoder::decode() {
 	printf("0x%04x: ", pos - script_begin);
 	int code = script[pos];	
     int pre_pos = * position;
-   
     int code_length = 0;
     ret_code = 0;
 
-    code = 0x11;
-    memset(&descBuffer[0], 0, sizeof(descBuffer));
+    //code = 0x11;
+    //memset(&descBuffer[0], 0, sizeof(descBuffer));
     auto search = switch_map.find(code);
     if (search != switch_map.end()) {
         code_length = search->second();
     }
     else {
-        printf("FATAL: unknown opcode %02X", code);
+        sprintf(buffer, "FATAL: unknown opcode %02X", code);
         code_length = 1;
     }
 
-    printf(descBuffer);
-    memset(&descBuffer[0], 0, sizeof(descBuffer));
+    printf(buffer);
+    //memset(&descBuffer[0], 0, sizeof(descBuffer));
 
     pos += code_length;
-
 	printf("\n{");
 	for (int i = 0; i < code_length; i++) {
 		printf("%02X ", script[pre_pos + i]);
@@ -69,223 +69,6 @@ int Decoder::decode() {
     /*
 	switch(code)
 	{
-		case 0x20:
-		{
-			printf("var[0x%04X] *= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
-			currentScriptPosition += 6;
-			break;
-		}
-		case 0x21:
-		{
-			printf("var[0x%04X] /= %s", read16u(1), getVar16s(3, currentScriptData[currentScriptPosition + 5], 0x40));
-			currentScriptPosition += 6;
-			break;
-		}
-		case 0x22:
-		{
-			printf("%s = sin(%s, ", getVarName(read16u(1)), getVar16s(3, currentScriptData[currentScriptPosition + 7], 0x40));
-			printf("%s)", getVar16s(5, currentScriptData[currentScriptPosition + 7], 0x20));
-			currentScriptPosition += 8;
-			break;
-		}
-		case 0x23:
-		{
-			printf("%s = cos(%s, ", getVarName(read16u(1)), getVar16s(3, currentScriptData[currentScriptPosition + 7], 0x40));
-			printf("%s)", getVar16s(5, currentScriptData[currentScriptPosition + 7], 0x20));
-			currentScriptPosition += 8;
-			break;
-		}
-		case 0x24:
-		{
-			printf("%s = tan(%s, ", getVarName(read16u(1)), getVar16s(3, currentScriptData[currentScriptPosition + 7], 0x40));
-			printf("%s)", getVar16s(5, currentScriptData[currentScriptPosition + 7], 0x20));
-			currentScriptPosition += 8;
-			break;
-		}
-		case 0x25:
-		{
-			printf("SET_POSITION_UNSIGNED(TODO)");
-			currentScriptPosition += 8;
-			break;
-		}
-		case 0x26:
-		{
-			printf("SET_POSITION_SIGNED(TODO)");
-			currentScriptPosition += 8;
-			break;
-		}
-		case 0x27:
-		{
-			printf("op27(%s)", getVar16u(1));
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x28:
-		{
-			printf("op28(%s)", getVar16u(1));
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x29:
-		{
-			printf("op29(%s)", getVar16u(1));
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x2A:
-		{
-			printf("op2A(%s)", getVar16s(1, currentScriptData[currentScriptPosition + 3], 0x80));
-			currentScriptPosition += 4;
-			break;
-		}
-		case 0x2B:
-		{
-			printf("ENABLE_CHARACTER_CONTROLS(0x%02X)", currentScriptData[currentScriptPosition + 1]);
-			currentScriptPosition += 2;
-			break;
-		}
-		case 0x2C:
-		{
-			printf("DISABLE_CHARACTER_CONTROLS()");
-			currentScriptPosition += 1;
-			break;
-		}
-		case 0x2D:
-		{
-			printf("WAIT(%s)", getVar16u(1));
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x2E:
-		{
-			printf("TURN_TO_CHARACTER(%s)", readCharacter(1));
-			currentScriptPosition += 2;
-			break;
-		}
-		case 0x2F:
-		{
-			printf("SET_ROTATION_SIMPLE(0x%02X)", currentScriptData[currentScriptPosition + 1]);
-			currentScriptPosition += 2;
-			break;
-		}
-		case 0x30:
-		{
-			printf("SET_ROTATION(%s)", getVar16u(1));
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x31:
-		{
-			printf("TURN_TO_DIRECTION(%s", readCharacter(1));
-			printf(", ");
-			printf(getVar16u(2));
-			printf(")");
-			currentScriptPosition += 4;
-			break;
-		}
-		case 0x32:
-		{
-			printf("op32(%s", readCharacter(1));
-			printf(", ");
-			printf(getVar16u(2));
-			printf(")");
-			currentScriptPosition += 4;
-			break;
-		}
-		case 0x33:
-		{
-			printf("Character(%d) turns to Character(%d)", currentScriptData[currentScriptPosition + 1]&0x7f, currentScriptData[currentScriptPosition + 2]&0x7f);
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x34:
-		{
-			printf("op34(0x%02X)", currentScriptData[currentScriptPosition + 1]);
-			currentScriptPosition += 2;
-			break;
-		}
-		case 0x35:
-		{
-			printf("op35(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], readCharacter(2));
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x36:
-		{
-			// setup 3 variables
-			printf("SET_CHARACTER_VIEWABLE(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], readCharacter(2));
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x37:
-		{
-			printf("op37(0x%02X)", currentScriptData[currentScriptPosition + 1]);
-			currentScriptPosition += 2;
-			break;
-		}
-		case 0x38:
-		{
-			printf("op38(0x%02X)", currentScriptData[currentScriptPosition + 1]);
-			currentScriptPosition += 2;
-			break;
-		}
-		case 0x39:
-		{
-			printf("op39(0x%02X)", currentScriptData[currentScriptPosition + 1]);
-			currentScriptPosition += 2;
-			break;
-		}
-		case 0x3A:
-		{
-			printf("op3A()");
-			currentScriptPosition += 1;
-			break;
-		}
-		case 0x3B:
-		{
-			printf("STOP_SCRIPT_EXEC()");
-			currentScriptPosition += 1;
-			ret_code = 1;
-			break;
-		}
-		case 0x3C:
-		{
-			printf("SET_ANIMATION(%s)", getVar16u(1));
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x3D:
-		{
-			printf("SET_WALK_ANIMATION(0x%02X, %s)", currentScriptData[currentScriptPosition + 1], getVar16u(2));
-			currentScriptPosition += 4;
-			break;
-		}
-		case 0x3E:
-		{
-			printf("op3E(%s)", getVar16u(1));
-			currentScriptPosition += 3;
-			break;
-		}
-		case 0x3F:
-		{
-			if(currentScriptData[currentScriptPosition + 1] == 0)
-			{
-				printf("WALK_TO(0x%02X, ", currentScriptData[currentScriptPosition + 1]);
-				printf(getVar16s(2, currentScriptData[currentScriptPosition + 8], 0x80));
-				printf(", ");
-				printf(getVar16s(4, currentScriptData[currentScriptPosition + 8], 0x40));
-				printf(", ");
-				printf(getVar16s(6, currentScriptData[currentScriptPosition + 8], 0x20));
-				printf(")");
-				currentScriptPosition += 9;
-			}
-			else
-			{
-				printf("WALK_TO(0x%02X) // wait walk", currentScriptData[currentScriptPosition + 1]);
-				currentScriptPosition += 2;
-			}
-			break;
-		}
 		case 0x40:
 		{
 			if(currentScriptData[currentScriptPosition + 1] == 0)

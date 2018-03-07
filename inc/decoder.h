@@ -15,17 +15,22 @@ using namespace std;
 
 class Decoder {
     private:
-        //typedef int(Decoder::*opFunc)();
         void * lib;
 
-        typedef int(*opFunc)();
+        typedef int(*intFunc)();
+        typedef char*(*charFunc)();
+
+        charFunc getBuffer;
+
+        char * buffer;
+
         char descBuffer[100];
     	int script_begin;
     	int * position;
     	unsigned char * script;
         vector<unsigned int> jumps;
 
-        map<int, opFunc> switch_map;
+        map<int, intFunc> switch_map;
 
         int ret_code;
 

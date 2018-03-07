@@ -16,6 +16,8 @@ unsigned char * script;
 
 extern "C" void init(unsigned char * script_data, int * offset);
 
+extern "C" char * getBuffer();
+
 unsigned short int read16u(int idx);
 signed short int read16s(int idx);
 char * getVar16u(int idx);
