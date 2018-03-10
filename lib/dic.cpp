@@ -358,21 +358,21 @@ extern "C" int op0x22() {
     char temp[50];
     sprintf(descBuffer, "%s = sin(%s, ", getVarName(read16u(1)), getVar16s(3, script[* position + 7], 0x40));
     sprintf(temp, "%s)", getVar16s(5, script[* position + 7], 0x20));
-    strcpy (descBuffer, temp);
+    strcat (descBuffer, temp);
     return 8;
 }
 extern "C" int op0x23() {
     char temp[50];
     sprintf(descBuffer, "%s = cos(%s, ", getVarName(read16u(1)), getVar16s(3, script[* position + 7], 0x40));
     sprintf(temp, "%s)", getVar16s(5, script[* position + 7], 0x20));
-    strcpy (descBuffer, temp);
+    strcat (descBuffer, temp);
     return 8;
 }
 extern "C" int op0x24() {
     char temp[50];
     sprintf(descBuffer, "%s = tan(%s, ", getVarName(read16u(1)), getVar16s(3, script[* position + 7], 0x40));
     sprintf(temp, "%s)", getVar16s(5, script[* position + 7], 0x20));
-    strcpy (descBuffer, temp);
+    strcat (descBuffer, temp);
     return 8;
 }
 extern "C" int op0x25() { ///////////////////////////////////////////////////////////////////////////////////
@@ -488,3 +488,172 @@ extern "C" int op0x3F() {
         return 2;
     }
 }
+extern "C" int op0x40() {
+    if(script[* position + 1] == 0) {
+        sprintf(descBuffer, "WALK_TO_2(0x%02X, %s, %s, %s, %s)", script[* position + 1], getVar16s(2, script[* position + 8], 0x80), getVar16s(4, script[* position + 8], 0x40), getVar16s(6, script[* position + 8], 0x20), getVar16u(9));
+        return 11;
+    } else {
+        sprintf(descBuffer, "WALK_TO_2(0x%02X) // wait walk", script[* position + 1]);
+        return 2;
+    }
+}
+extern "C" int op0x41() {
+    sprintf(descBuffer, "SET_MOVEMENT_SPEED(%s)", getVar16u(1));
+    return 3;
+}
+extern "C" int op0x42() {
+    if(script[* position + 1] != 1) {
+        sprintf(descBuffer, "WALK_TO_POSITION(0x%02X, %s, %s, %s)", script[* position + 1], getVar16s(2, script[* position + 6], 0x80), getVar16s(4, script[* position + 6], 0x40), getVar16s(6, script[* position + 6], 0x20));
+        return 9; // we are missing something here
+    } else {
+        sprintf(descBuffer, "WALK_TO_POSITION(0x%02X)", script[* position + 1]);
+        return 2;
+    }
+}
+extern "C" int op0x43() {
+    if(script[* position + 1] != 1) {
+        sprintf(descBuffer, "WALK_TO_POSITION_2(0x%02X, %s, %s, %s)", script[* position + 1], getVar16s(2, script[* position + 6], 0x80), getVar16s(4, script[* position + 6], 0x40), getVar16u(7));
+        return 11;
+    } else {
+        sprintf(descBuffer, "WALK_TO_POSITION_2(0x%02X)", script[* position + 1]);
+        return 2;
+    }
+}
+extern "C" int op0x44() {
+    if(script[* position + 1] != 1) {
+        sprintf(descBuffer, "op44(0x%02X, %s) //?", script[* position + 1], readCharacter(2));
+        return 6;
+    } else {
+        printf("op44(0x%02X, %s) //?", script[* position + 1], readCharacter(2));
+        return 6;
+    }
+}
+extern "C" int op0x45() {
+    if(script[* position + 1] != 1) {
+        sprintf(descBuffer, "op45(0x%02X, %s, %s) //?", script[* position + 1], readCharacter(2), getVar16u(3));
+        return 8;
+    } else {
+        sprintf(descBuffer, "op45(0x%02X, %s, %s) //?", script[* position + 1], readCharacter(2), getVar16u(3));
+        return 8;
+    }
+}
+extern "C" int op0x46() {
+    if(script[* position + 1] == 1) {
+        sprintf(descBuffer, "MOVE(0x%02X) // wait movement completion", script[* position + 1]);
+        return 2;
+    } else {
+        sprintf(descBuffer, "MOVE(0x%02X, %s, %s)", script[* position + 1], getVar16u(2), getVar16u(4));
+        // direction
+        // length in frame
+        return 6;
+    }
+}
+extern "C" int op0x47() {
+    sprintf(descBuffer, "op47(0x%02X)", script[* position + 1]);
+    return 2;
+}
+extern "C" int op0x48() {
+    // setup 3 variables
+    sprintf(descBuffer, "GET_POSITION(%s, 0x%04X, 0x%04X, 0x%04X)", readCharacter(1), read16u(2), read16u(4), read16u(6));
+	return 8;
+}
+extern "C" int op0x49() {
+    sprintf(descBuffer, "%s = TARGET_ROTATION & 0xFFF\n", getVarName(read16u(1)));
+    return 3;
+}
+extern "C" int op0x4A() {
+    // setup 3 variables
+    sprintf(descBuffer, "op4A(%s, 0x%04X)", readCharacter(1), read16u(2));
+    return 4;
+}
+extern "C" int op0x4B() {
+    sprintf(descBuffer, "DEBUG(%s)", getVarName(read16u(1)));
+    return 3;
+}
+extern "C" int op0x4C() {
+    sprintf(descBuffer, "op4C(0x04X, %s, %s, %s, %s)", read16u(1), getVar16s(3, script[* position + 0xB], 0x40), getVar16s(5, script[* position + 0xB], 0x20), getVar16s(7, script[* position + 0xB], 0x10), getVar16s(9, script[* position + 0xB], 0x08));
+    return 0xC;
+}
+extern "C" int op0x4D() {
+    char temp[50];
+    sprintf(descBuffer, "%s = op4D(", getVarName(read16u(1)));
+    sprintf(temp, "%s, ", getVar16s(3, script[* position + 0xF], 0x40));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16s(5, script[* position + 0xF], 0x20));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16s(7, script[* position + 0xF], 0x10));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16s(9, script[* position + 0xF], 0x08));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16s(11, script[* position + 0xF], 0x04));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s)", getVar16s(13, script[* position + 0xF], 0x04));
+    strcat(descBuffer, temp);
+    return 0x10;
+}
+extern "C" int op0x4E() {
+    sprintf(descBuffer, "%s = COMPUTE_CHARACTER_DISTANCE(%s, %s)", getVarName(read16u(1)), readCharacter(3), readCharacter(4));
+    return 5;
+}
+extern "C" int op0x4F() { // Check this shit;
+    sprintf(descBuffer, "op4F(0x%02X, %s, %s)", readCharacter(1), readCharacter(3), readCharacter(4));
+    return 5; 
+}
+extern "C" int op0x50() {
+    sprintf(descBuffer, "IF (scriptVar3 && 0x%02X) == 0 JUMP 0x%02X", read16u(1), read16u(3));
+    return 5;
+}
+extern "C" int op0x51() {
+    sprintf(descBuffer, "IF (scriptVar2 && 0x%02X) == 0 JUMP 0x%02X", read16u(1), read16u(3));
+    return 5;
+}
+// 52
+// 53
+extern "C" int op0x54() {
+    sprintf(descBuffer, "scriptVar2 = 0");
+    return 1;
+}
+extern "C" int op0x55() {
+    sprintf(descBuffer, "op55(%d) JUMP 0x%02X", script[* position + 1], read16u(2));
+	return 4;
+}
+extern "C" int op0x56() {
+    sprintf(descBuffer, "op56(%d) JUMP 0x%02X", script[* position + 1], read16u(2));
+    return 4;
+}
+// 57
+// 58
+extern "C" int op0x59() {
+    sprintf(descBuffer, "op59()");
+    return 1;
+}
+extern "C" int op0x5A() {
+    sprintf(descBuffer, "SET_NEXT_ROOM(%s, %s)", getVar16u(1), getVar16u(3));
+    return 5;
+}
+extern "C" int op0x5B() {
+    if(script[* position + 1] == 0) {
+        char temp[50];
+        sprintf(descBuffer, "op5B(%d, ", script[* position + 1]);
+        sprintf(temp, "%s, ", getVar16s(2, script[* position + 10], 0x80));
+        strcat(descBuffer, temp);
+
+        sprintf(temp, "%s, ", getVar16s(4, script[* position + 10], 0x40));
+        strcat(descBuffer, temp);
+
+        sprintf(temp, "%s, ", getVar16s(6, script[* position + 10], 0x20));
+        strcat(descBuffer, temp);
+
+        sprintf(temp, "%s)", getVar16s(8, script[* position + 10], 0x10));
+        return 0xB;
+    } else {
+        printf("op5B(%d)", script[* position + 1]);
+        return 2;
+    }
+}
+
