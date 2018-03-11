@@ -656,4 +656,501 @@ extern "C" int op0x5B() {
         return 2;
     }
 }
+extern "C" int op0x5C() {
+    switch(script[* position + 1] & 3) {
+        case 0:
+        case 1:
+        case 2:
+        {
+            char temp[50];
+            sprintf(descBuffer, "JUMP_MOVE(%d, ", script[* position + 1] & 3);
+            sprintf(temp, "%s, ", getVar16s(2, script[* position + 8], 0x80));
+            strcat(descBuffer, temp);
 
+            sprintf(temp, "%s, ", getVar16s(4, script[* position + 8], 0x40));
+            strcat(descBuffer, temp);
+
+            sprintf(temp, "%s, ", getVar16s(6, script[* position + 8], 0x20));
+            strcat(descBuffer, temp);
+
+            sprintf(temp, "%s)", getVar16u(9));
+            strcat(descBuffer, temp);
+
+            return 0xB;
+        }
+        case 3:
+        {
+            sprintf(descBuffer, "JUMP_MOVE(%d)", script[* position + 1] & 3);
+            return 0x2;
+        }
+        default:
+        {
+            //assert(0);
+            printf("JUMP_MOVE() //? Unrecognized argument, unable to determine length");
+            ret_code = 4;
+            return 0x2;
+        }
+        
+    }
+}
+extern "C" int op0x5D() {
+    char temp[50];
+    sprintf(descBuffer, "SET_CAMERA_POSITION(");
+	sprintf(temp, "0x%02X, ", script[* position + 1]);
+    strcat(descBuffer, temp);
+
+	sprintf(temp, "%s, ", getVar16s(2, script[* position + 8], 0x80));
+    strcat(descBuffer, temp);
+
+	sprintf(temp, "%s, ", getVar16s(4, script[* position + 8], 0x40));
+    strcat(descBuffer, temp);
+
+	sprintf(temp, "%s)", getVar16s(6, script[* position + 8], 0x20));
+	strcat(descBuffer, temp);
+	return 0xB;
+}
+extern "C" int op0x5E() {
+    if (script[* position + 1] == 0) {
+        sprintf(descBuffer, "SET_CAMERA_TO_ACTOR(0x%02X, %s)", script[* position + 1], getVar16u(2));
+        return 4;
+    } else {
+        sprintf(descBuffer, "SET_CAMERA_TO_ACTOR(0x%02X)", script[* position + 1]);
+        return 2;
+    }
+}
+extern "C" int op0x5F() {
+    sprintf(descBuffer, "op5F(%s)", readCharacter(1));
+	return 2;
+}
+extern "C" int op0x60() {
+    sprintf(descBuffer, "op60()");
+    return 1;
+}
+extern "C" int op0x61() {
+    switch(script[* position + 1]) {
+        case 0x00:
+        {
+            char temp[50];
+            sprintf(descBuffer, "CAMERA_FOLLOW_CHARACTER(%d, ", script[* position + 1]);
+            sprintf(temp, "%s, ", readCharacter(2));
+            strcat(descBuffer, temp);
+
+            sprintf(temp, "%s)", getVar16u(3));
+            strcat(descBuffer, temp);
+
+            sprintf(temp, " //? Check PC1 in CD0-373-Temporal Vortex - Confusion Complex");
+            strcat(descBuffer, temp);
+            return 5;
+        }
+        case 0x01:
+        {
+            sprintf(descBuffer, "CAMERA_FOLLOW_CHARACTER(%d) // wait for camera to reach destination", script[* position + 1]);
+            return 2;
+        }
+        default:
+        {
+            //assert(0);
+            sprintf(descBuffer, "CAMERA_FOLLOW_CHARACTER() //? Unrecognized argument, unable to determine length");
+            ret_code = 4;
+            return 2;
+        }
+    }
+}
+extern "C" int op0x62() {
+    char temp[50];
+    sprintf(descBuffer, "SETUP_DIALOG_WINDOW(");
+    sprintf(temp, "%s, ", getVar16u(1));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16u(3));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16u(5));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16u(7));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s)", getVar16u(9));
+    strcat(descBuffer, temp);
+    return 11;
+}
+extern "C" int op0x63() {
+    sprintf(descBuffer, "op63(%s)", getVar16u(1));
+    return 3;
+}
+extern "C" int op0x64() {
+    sprintf(descBuffer, "op64(%s)", getVar16s(1, script[* position + 3], 0x80));
+    return 4;
+}
+extern "C" int op0x65() {
+    sprintf(descBuffer, "op65(0x%04X)", read16u(1));
+    return 3;
+}
+extern "C" int op0x66() {
+    sprintf(descBuffer, "op66(0x%02X, %s)", script[* position + 1], getVar16s(2, script[* position + 4], 0x80));
+    return 5;
+}
+extern "C" int op0x67() {
+    sprintf(descBuffer, "SET_SHADOW_COLOR(0x%04X)", read16u(1));
+    return 3;
+}
+extern "C" int op0x68() {
+    char temp[50];
+    sprintf(descBuffer, "SET_SCREEN_RGB(");
+    sprintf(temp, "%s, ", getVar16u(1));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16u(3));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16u(5));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16u(7));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s)", getVar16u(9));
+    strcat(descBuffer, temp);
+    return 11;
+}
+extern "C" int op0x69() {
+    unsigned short int jumpOffset = read16u(3);
+    sprintf(descBuffer, "IF %s == SCENARIO_FLAG JUMP 0x%04X", getVar16u(1), jumpOffset);
+    return 5;
+}
+extern "C" int op0x6A() {
+    unsigned short int jumpOffset = read16u(3);
+    sprintf(descBuffer, "IF %s < SCENARIO_FLAG JUMP 0x%04X", getVar16u(1), jumpOffset);
+    return 5;
+}
+extern "C" int op0x6B() {
+    unsigned short int jumpOffset = read16u(3);
+    sprintf(descBuffer, "IF %s != SCENARIO_FLAG JUMP 0x%04X", getVar16u(1), jumpOffset);
+    return 5;
+}
+extern "C" int op0x6C() {
+    sprintf(descBuffer, "SCENARIO_FLAG = %s", getVar16u(1));
+    return 3;
+}
+extern "C" int op0x6D() {
+    sprintf(descBuffer, "%s = SCENARIO_FLAG", getVarName(read16u(1)));
+    return 3;
+}
+extern "C" int op0x6E() {
+    sprintf(descBuffer, "SWAP(var[0x%02X], var[0x%02X])", read16u(1), read16u(3));
+    return 5;
+}
+extern "C" int op0x6F() {
+    unsigned long int arrayOffset = read16u(1);
+    sprintf(descBuffer, "%s = array_0x%02X[%s]", getVarName(read16u(3)), arrayOffset, getVar16u(5));
+    //assert((decompileArray[arrayOffset]._type == TYPE_UNK) || (decompileArray[arrayOffset]._type == TYPE_ARRAY_8));
+    //decompileArray[arrayOffset]._type = TYPE_ARRAY_8;
+    return 7;
+}
+extern "C" int op0x70() {
+    unsigned long int arrayOffset = read16u(1);
+    sprintf(descBuffer, "%s = array_0x%02X[%s] %d", getVarName(read16u(3)), arrayOffset, getVar16u(5), script[* position + 7]);
+    //assert((decompileArray[arrayOffset]._type == TYPE_UNK) || (decompileArray[arrayOffset]._type == TYPE_ARRAY_16));
+    //decompileArray[arrayOffset]._type = TYPE_ARRAY_16;
+    return 8;
+}
+extern "C" int op0x71() {
+    sprintf(descBuffer, "SET_VAR_BIT(%s)", getVar16s(1, script[* position + 3], 0x80));
+    return 4;
+}
+extern "C" int op0x72() { //////////////////////////////// Look at it closely
+    const char* varBitNumAsString = getVar16s(1, script[* position + 3], 0x80);
+    sprintf(descBuffer, "CLEAR_VAR_BIT(%s)", varBitNumAsString);
+    return 4;
+}
+extern "C" int op0x73() {
+    const char* varBitNumAsString = getVar16s(1, script[* position + 3], 0x80);
+    sprintf(descBuffer, "JUMP 0x%04X IF VAR_BIT[%s] CLEAR", read16u(4), varBitNumAsString, 0x80);
+    return 6;
+}
+extern "C" int op0x74() {
+    char temp[50];
+    sprintf(descBuffer, "op74(");
+    sprintf(temp, "%s, ", getVar16s(1, script[* position + 3], 0x80));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s)", readCharacter(4));
+    strcat(descBuffer, temp);
+    return 5;
+}
+extern "C" int op0x75() {
+    sprintf(descBuffer, "op75(0x%02X, 0x%02X, %s)", script[* position + 1], script[* position + 2], getVar16u(3));
+    return 5;
+}
+extern "C" int op0x76() {
+    sprintf(descBuffer, "op76(0x%02X, 0x%02X, %s)", script[* position + 1], script[* position + 2], getVar16u(3));
+    return 5;
+}
+extern "C" int op0x77() {
+    sprintf(descBuffer, "op77(0x%02X, 0x%02X, 0x%04X)", script[* position + 1], script[* position + 2], read16u(3));
+    return 5;
+}
+extern "C" int op0x78() {
+    sprintf(descBuffer, "op78(0x%02X, 0x%02X, %s)", script[* position + 1], script[* position + 2], getVar16u(3));
+    return 5;
+}
+extern "C" int op0x79() {
+    char temp[50];
+    sprintf(descBuffer, "IF op79(%s, ", readCharacter(1));
+    sprintf(temp, "%s, ", getVar16u(2));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, ") JUMP 0x%04X", read16u(4));
+    strcat(descBuffer, temp);
+    return 6;
+}
+extern "C" int op0x7A() {
+    char temp[50];
+    sprintf(descBuffer, "op7A(");
+    sprintf(temp, "%s, ", readCharacter(1));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s", getVar16u(2));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, ") JUMP 0x%04X", read16u(4));
+    strcat(descBuffer, temp);
+    return 6;
+}
+extern "C" int op0x7B() {
+    sprintf(descBuffer, "ADD_CHARATER_TO_PARTY(%s)", getVar16u(1));
+    return 3;
+}
+extern "C" int op0x7C() {
+    sprintf(descBuffer, "EXECUTE_CHARACTER_SCRIPT()");
+    return 1;
+}
+extern "C" int op0x7D() {
+    sprintf(descBuffer, "REMOVE_FROM_PARTY(%s)", readCharacter(1));
+    return 2;
+}
+extern "C" int op0x7E() {
+    sprintf(descBuffer, "PLAY_MOVIE(%s)", getVar16u(1));
+    return 3;
+}
+extern "C" int op0x7F() {
+    sprintf(descBuffer, "WAIT_MOVIE()");
+    return 1;
+}
+extern "C" int op0x80() {
+    sprintf(descBuffer, "ENABLE_BACKGROUND_LAYER(%s)", getVar16u(1)); // max is 0x1F background layer
+    return 3;
+}
+extern "C" int op0x81() {
+    sprintf(descBuffer, "DISABLE_BACKGROUND_LAYER(%s)", getVar16u(1)); // max is 0x1F background layer
+    return 3;
+}
+extern "C" int op0x82() {
+    sprintf(descBuffer, "AXIS_CHARACTER_SCALE(0x%02X, %s, %s)", script[* position + 1], readCharacter(2), getVar16u(3));
+    return 5;
+}
+extern "C" int op0x83() {
+    char temp[50];
+    sprintf(descBuffer, "op83(");
+    sprintf(temp, "%s, ", getVar16s(1, script[* position + 9], 0x80));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16s(3, script[* position + 9], 0x40));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16s(5, script[* position + 9], 0x20));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s)", getVar16s(7, script[* position + 9], 0x10));
+    strcat(descBuffer, temp);
+    return 10;
+}
+extern "C" int op0x84() {
+    char temp[50];
+    sprintf(descBuffer, "op84(");
+    sprintf(temp, "%s, ", getVar16s(1, script[* position + 0xD], 0x80));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16s(3, script[* position + 0xD], 0x40));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16s(5, script[* position + 0xD], 0x20));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16s(7, script[* position + 0xD], 0x10));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16s(9, script[* position + 0xD], 0xF));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16s(0xB, script[* position + 0xD], 0xE));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16u(0xE));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16u(0x10));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, ", getVar16u(0x12));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "0x%02X", script[* position + 0x14]);
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "0x%02X", script[* position + 0x15]);
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "0x%02X", script[* position + 0x16]);
+    strcat(descBuffer, temp);
+
+    sprintf(temp, ")");
+    strcat(descBuffer, temp);
+    return 0x17;
+}
+extern "C" int op0x85() {
+    sprintf(descBuffer, "op85()");
+    return 1;
+}
+extern "C" int op0x86() {
+    sprintf(descBuffer, "op86(0x%02X)", script[* position + 1]);
+    return 2;
+}
+extern "C" int op0x87() {
+    sprintf(descBuffer, "op87(%s, %s, %s)", getVar16u(1), getVar16u(3), getVar16u(5));
+    return 7;
+}
+extern "C" int op0x88() {
+    sprintf(descBuffer, "PLAY_SONG(%s)", getVar16u(1));
+    return 3;
+}
+extern "C" int op0x89() {
+    sprintf(descBuffer, "op89(%s)", getVar16u(1)); // not using all the bytes...
+    return 5;
+}
+extern "C" int op0x8A() {
+    sprintf(descBuffer, "op8A() // wait something");
+    return 1;
+}
+extern "C" int op0x8B() {
+    sprintf(descBuffer, "op8B(%s, %s)", getVar16u(1), getVar16u(3));
+    return 5;
+}
+extern "C" int op0x8C() {
+    sprintf(descBuffer, "op8C(%s, %s)", getVar16u(1), getVar16u(3));
+    return 5;
+}
+extern "C" int op0x8D() {
+    sprintf(descBuffer, "op8D(0x%02X)", script[* position + 1]);
+    return 2;
+}
+extern "C" int op0x8E() {
+    sprintf(descBuffer, "op8E(0x%02X)", script[* position + 1]);
+    return 2;
+}
+extern "C" int op0x8F() {
+    char temp[50];
+    sprintf(descBuffer, "POLYGON(");
+    sprintf(temp, "%s, %s, %s, %s, ", getVar16u(1), getVar16u(3), getVar16u(5), getVar16u(7));
+    strcat(descBuffer, temp);
+
+    sprintf(temp, "%s, %s, %s, %s)", getVar16u(9), getVar16u(0xB), getVar16u(0xD), getVar16u(0xF));
+    strcat(descBuffer, temp);
+    return 0x11;
+}
+extern "C" int op0x90() {
+    switch(script[* position + 1]) {
+        case 0:
+        {
+            sprintf(descBuffer, "BG_WAVE_OFF(0x%02X, %s)", script[* position + 1], getVar16u(2));
+            return 4;
+        }	
+        case 1:
+        case 2:
+        case 3:
+
+            sprintf(descBuffer, "BG_WAVE_OFF(0x%02X)", script[* position + 1]);
+            return 2;
+        default:
+        {
+            //assert(0);
+            sprintf(descBuffer, "BG_WAVE_OFF() //? Unrecognized argument, unable to determine length");
+            ret_code = 4;
+            return 2;
+        }
+    }
+}
+extern "C" int op0x91() {
+    unsigned char param = script[* position + 1];
+    switch(param) {
+        case 0x01:
+        {
+            sprintf(descBuffer, "op91(0x%02X)", param);
+            return 2;
+        }
+        default:
+        {
+            //assert(0);
+            sprintf(descBuffer, "op91(0x%02X) //? Unrecognized argument, unable to determine length", param);
+            ret_code = 4;
+            return 2;
+        }
+    }
+}
+extern "C" int op0x92() {
+    sprintf(descBuffer, "op92(0x%02X, %s)", script[* position + 1], getVar16u(2));
+    return 4;
+}
+extern "C" int op0x93() {
+    sprintf(descBuffer, "op93(0x%02X)", script[* position + 1]);
+    return 2;
+}
+extern "C" int op0x94() {
+    sprintf(descBuffer, "IF Character(%s) not in party, JUMP 0x%04X", getVar16u(1), read16u(3));
+    return 5;
+}
+extern "C" int op0x95() {
+    sprintf(descBuffer, "IF UNKCHECK_Character_op95(%s) JUMP 0x%04X", getVar16u(1), read16u(3));
+    return 5;
+}
+extern "C" int op0x96() {
+    sprintf(descBuffer, "ADD_CHARACTER_TO_ROSTER(%s)", getVar16u(1));
+    return 3;
+}
+extern "C" int op0x97() {
+    sprintf(descBuffer, "REMOVE_CHARACTER_FROM_ROSTER(%s)", getVar16u(1));
+    return 3;
+}
+extern "C" int op0x98() {
+    sprintf(descBuffer, "%s = FIND_CHARACTER_SLOT_IN_PARTY(%s)", getVarName(read16u(1)), getVar16u(3));
+    return 5;
+}
+extern "C" int op0x99() {
+    sprintf(descBuffer, "var[0x%04X] = PART_CHARACTER_ID(%s)", read16u(1), getVar16u(3));
+    return 5;
+}
+extern "C" int op0x9A() {
+    sprintf(descBuffer, "op9A(%s, 0x%04X)", getVar16u(1), read16u(3));
+    return 5;
+}
+extern "C" int op0x9B() {
+    sprintf(descBuffer, "op9B(\"%c%c%c%c\", %s)", script[* position + 1], script[* position + 2], script[* position + 3], script[* position + 4], readCharacter(5));
+    return 6;
+}
+extern "C" int op0x9C() {
+    sprintf(descBuffer, "op9C(\"%c%c%c%c\")", script[* position + 1], script[* position + 2], script[* position + 3], script[* position + 4]);
+    return 5;
+}
+extern "C" int op0x9D() {
+    sprintf(descBuffer, "op9D(%s)", readCharacter(1));
+    return 2;
+}
+extern "C" int op0x9E() {
+    sprintf(descBuffer, "SETUP_CURRENT_DIALOG_FACE(%s)", getVar16u(1));
+    return 3;
+}
+extern "C" int op0x9F() {
+    sprintf(descBuffer, "CLEAR_DIALOG_FACE()");
+    return 1;
+}
