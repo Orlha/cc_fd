@@ -571,7 +571,8 @@ extern "C" int op0x4B() {
     return 3;
 }
 extern "C" int op0x4C() {
-    sprintf(descBuffer, "op4C(0x04X, %s, %s, %s, %s)", read16u(1), getVar16s(3, script[* position + 0xB], 0x40), getVar16s(5, script[* position + 0xB], 0x20), getVar16s(7, script[* position + 0xB], 0x10), getVar16s(9, script[* position + 0xB], 0x08));
+    //sprintf(descBuffer, "op4C(0x04X, %s, %s, %s, %s)", read16u(1), getVar16s(3, script[* position + 0xB], 0x40), getVar16s(5, script[* position + 0xB], 0x20), getVar16s(7, script[* position + 0xB], 0x10), getVar16s(9, script[* position + 0xB], 0x08));
+    sprintf(descBuffer, "HolyFuck");
     return 0xC;
 }
 extern "C" int op0x4D() {
@@ -1153,4 +1154,319 @@ extern "C" int op0x9E() {
 extern "C" int op0x9F() {
     sprintf(descBuffer, "CLEAR_DIALOG_FACE()");
     return 1;
+}
+extern "C" int op0xA0() {
+    // untested
+    sprintf(descBuffer, "opA0(0x%02X)", script[* position + 1]);
+    return 2;
+}
+extern "C" int op0xA1() {
+    sprintf(descBuffer, "CHARACTER_RGB(%s, %s, %s, %s)", readCharacter(1), getVar16u(2), getVar16u(4), getVar16u(6));
+    return 8;
+}
+extern "C" int op0xA2() {
+    sprintf(descBuffer, "opA2(%s, %s)", readCharacter(1), getVar16u(2));
+    return 4;
+}
+extern "C" int op0xA3() {
+    sprintf(descBuffer, "BATTLE_opA3(%s, %s, %s)", getVar16u(1), getVar16u(3), getVar16u(5));
+    return 7;
+}
+extern "C" int op0xA4() {
+    sprintf(descBuffer, "opA4(%s)", getVar16u(1));
+    return 3;
+}
+extern "C" int op0xA5() {
+    // untested
+    sprintf(descBuffer, "opA5(%s)", getVar16u(1));
+    return 3;
+}
+extern "C" int op0xA6() {
+    sprintf(descBuffer, "opA6(0x%02X)", script[* position + 1]);
+    return 2;
+}
+extern "C" int op0xA7() {
+    sprintf(descBuffer, "opA7(%s, %s, %s, %s)", getVar16u(1), getVar16u(3), getVar16u(5), getVar16u(7));
+    return 9;
+}
+extern "C" int op0xA8() {
+    sprintf(descBuffer, "opA8(0x%02X, %s)", script[* position + 1], getVar16u(2));
+    return 4;
+}
+extern "C" int op0xA9() {
+    sprintf(descBuffer, "opA9(%s, %s)", readCharacter(1), getVar16u(2));
+    return 4;
+}
+extern "C" int op0xAA() {
+    sprintf(descBuffer, "SET_AXIS_ROTATION(0x%02X, %s, %s)", script[* position + 1], readCharacter(2), getVar16u(3));
+    return 5;
+}
+extern "C" int op0xAB() {
+    sprintf(descBuffer, "opAB(%s, %s)", getVar16u(1), getVar16u(3));
+    return 5;
+}
+extern "C" int op0xAC() {
+    sprintf(descBuffer, "opAC(0x%02X, %s)", script[* position + 1], getVar16u(2));
+    return 4;
+}
+extern "C" int op0xAD() {
+    sprintf(descBuffer, "opAD(0x%02X)", script[* position + 1]);
+    return 2;
+}
+extern "C" int op0xAE() {
+    sprintf(descBuffer, "opAE(0x%02X)", script[* position + 1]);
+    return 2;
+}
+extern "C" int op0xAF() {
+    sprintf(descBuffer, "opAF(%s, %s, %s)", getVar16s(1, script[* position + 5], 0x80), getVar16s(3, script[* position + 5], 0x40), getVar16u(6));
+    return 8;
+}
+extern "C" int op0xB0() {
+    sprintf(descBuffer, "opB0(%s)", getVar16s(1, script[* position + 3], 0x80));
+    return 4;
+}
+extern "C" int op0xB1() {
+    sprintf(descBuffer, "opB1(0x%02X)", script[* position + 1]);
+    return 2;
+}
+extern "C" int op0xB2() {
+    switch(script[* position + 1])
+    {
+        case 0:
+        {
+            sprintf(descBuffer, "OVERRIDE_FOLLOW?(0x%02X)", script[* position + 1]);
+            return 2;
+        }
+        case 1:
+        {
+            sprintf(descBuffer, "OVERRIDE_FOLLOW(0x%02X, %s)", script[* position + 1], getVar16u(2));
+            return 4;
+        }
+        default:
+        {
+            //assert(0);
+            sprintf(descBuffer, "OVERRIDE_FOLLOW() //? Unrecognized argument, unable to determine length");
+            ret_code = 4;
+            return 2;
+        }
+    }
+}
+extern "C" int op0xB3() {
+    sprintf(descBuffer, "opB3(%s) JUMP 0x%04X", readCharacter(1), read16u(2));
+    return 4;
+}
+extern "C" int op0xB4() {
+    sprintf(descBuffer, "IF_HAVE_ITEM(%s) ELSE JUMP 0x%04X", getVar16u(1), read16u(3));
+    return 5;
+}
+extern "C" int op0xB5() {
+    sprintf(descBuffer, "opB5(%s)", getVar16u(1));
+    return 3;
+}
+extern "C" int op0xB6() {
+    sprintf(descBuffer, "opB6(\"%c%c%c%c\")", script[* position + 1], script[* position + 2], script[* position + 3], script[* position + 4]);
+    return 5;
+}
+extern "C" int op0xB7() {
+    sprintf(descBuffer, "opB7(%s)", getVar16s(1, script[* position + 3], 0x80));
+    return 4;
+}
+extern "C" int op0xB8() {
+    sprintf(descBuffer, "opB8(%s) //?", getVar16u(1));
+    return 3;
+}
+extern "C" int op0xB9() {
+    sprintf(descBuffer, "opB9(%d, %s, %s) // missing something", script[* position + 1], readCharacter(2), getVar16u(3));
+    return 8;
+}
+extern "C" int op0xBA() {
+    int subOpcode = script[* position + 1];
+    switch(subOpcode) {
+        case 0x00: {
+            sprintf(descBuffer, "opBA%02X(%s, %s, %s) //? Setup 3 variables", subOpcode, getVar16u(2), getVar16u(4), getVar16u(6));
+            return 8;
+        }
+        case 0x01: {
+            sprintf(descBuffer, "opBA%02X() //? Wait", subOpcode);
+            return 2;
+        }
+        default: {
+            sprintf(descBuffer, "opBA%02X() //? Unrecognized argument, unable to determine length", subOpcode);
+            ret_code = 4;
+            return 2;
+        }
+    }
+}
+extern "C" int op0xBB() {
+    sprintf(descBuffer, "RECEIVE_ITEM(0x%02X, %s)", script[* position + 1], getVar16u(2));
+    return 4;
+}
+extern "C" int op0xBC() {
+    sprintf(descBuffer, "IF CHECK_MONEY(%d, %d) JUMP 0x%04X", read16u(1), read16u(3), read16u(5));
+    return 7;
+}
+extern "C" int op0xBD() {
+    sprintf(descBuffer, "RECEIVE_MONEY(%d, %s)", script[* position + 1], getVar16u(2));
+    return 4;
+}
+extern "C" int op0xBE() {
+    sprintf(descBuffer, "opBE()");
+    return 1;
+}
+extern "C" int op0xBF() {
+    if(script[* position + 1] == 0) {
+        sprintf(descBuffer, "opBF(%s) // missing stuff, can't decode properly yet", readCharacter(2));
+        return 5;
+    } else {
+        sprintf(descBuffer, "opBF(%s)", readCharacter(1));
+        return 2;
+    }
+}
+extern "C" int op0xC0() {
+    sprintf(descBuffer, "opC0(%s)", readCharacter(1));
+    return 2;
+}
+extern "C" int op0xC1() {
+    if(script[* position + 1] == 1) {
+        sprintf(descBuffer, "LOAD_ANIMATION(0x01)");
+        return 2;
+    } else {
+        sprintf(descBuffer, "LOAD_ANIMATION(0x%02X, %s, %s)", script[* position + 1], readCharacter(2), getVar16u(3));
+        return 5;
+    }
+}
+extern "C" int op0xC2() {
+    sprintf(descBuffer, "opC2(%s, %s, %s, %s)", getVar16u(1), getVar16u(3), getVar16u(5), getVar16u(7));
+    return 9;
+}
+extern "C" int op0xC3() {
+    sprintf(descBuffer, "GET_CAMERA_POSITION(VAR[0x%02X], VAR[0x%02X])", read16u(1), read16u(3));
+    return 5;
+}
+extern "C" int op0xC4() {
+    sprintf(descBuffer, "WAIT_ANIMATION_COMPLETED?(%s)", readCharacter(1));
+    return 2;
+}
+extern "C" int op0xC5() {
+    sprintf(descBuffer, "opC5(%s, %s, %s)", getVar16u(1), getVar16u(3), getVar16u(5));
+    return 7;
+}
+extern "C" int op0xC6() {
+    if(script[* position + 1] == 0) {
+        sprintf(descBuffer, "PLAY_SOUNDFX(%s, %s)", getVar16u(2), getVar16u(4));
+        return 6;
+    } else {
+        sprintf(descBuffer, "PLAY_SOUNDFX(%s, %s, %s, %s)", getVar16u(2), getVar16u(4), getVar16u(6), getVar16u(8));
+        return 10;
+    }
+}
+extern "C" int op0xC7() {
+    sprintf(descBuffer, "opC7(%s)", getVar16u(1));
+    return 3;
+}
+extern "C" int op0xC8() {
+    char temp[50];
+    sprintf(descBuffer, "opC8(%s, %s, %s, ", getVar16u(1), getVar16s(3, script[* position + 9], 0x40), getVar16s(5, script[* position + 9], 0x20));
+    sprintf(temp, "%s, %s, %s)", getVar16s(7, script[* position + 9], 0x10), getVar16u(10), getVar16u(12));
+    strcat(descBuffer, temp);
+    return 14;
+}
+extern "C" int op0xC9() {
+    sprintf(descBuffer, "BATTLE_opC9(%s, %s, %s)", getVar16u(1), getVar16u(3), getVar16u(5));
+    return 7;
+}
+extern "C" int op0xCA() {
+    sprintf(descBuffer, "opCA()");
+    return 1;
+}
+extern "C" int op0xCB() {
+    sprintf(descBuffer, "WAIT_ROTATION()");
+    return 1;
+}
+extern "C" int op0xCC() {
+    sprintf(descBuffer, "opCC(%s)", readCharacter(1));
+    return 2;
+}
+extern "C" int op0xCD() {
+    sprintf(descBuffer, "opCD(%s) JUMP 0x%04X", getVar16u(1), read16u(3));
+    return 5;
+}
+extern "C" int op0xCE() {
+    sprintf(descBuffer, "opCE(%s, 0x%02X)", getVar16u(1), read16u(3));
+    return 5;
+}
+extern "C" int op0xCF() {
+    sprintf(descBuffer, "opCF(%s, %s)", readCharacter(1), getVar16u(2));
+    return 4;
+}
+extern "C" int op0xD0() {
+    sprintf(descBuffer, "opD0() JUMP 0x%04X", read16u(1));
+    return 3;
+}
+extern "C" int op0xD1() {
+    sprintf(descBuffer, "opD1(%s)", getVar16u(1));
+    return 3;
+}
+extern "C" int op0xD2() {
+    sprintf(descBuffer, "opD2()");
+    return 1;
+}
+extern "C" int op0xD3() {
+    sprintf(descBuffer, "opD3(\"%c%c%c%c\") //? Effect related", script[* position + 1], script[* position + 2], script[* position + 3], script[* position + 4]);
+    return 5;
+}
+extern "C" int op0xD4() {
+    sprintf(descBuffer, "opD4(%s, %s)", getVar16u(1), getVar16u(3));
+    return 5;
+}
+extern "C" int op0xD5() {
+    sprintf(descBuffer, "var[0x%04X] = NUM_OF_ITEM(%s)", read16u(1), getVar16u(3));
+    return 5;
+}
+extern "C" int op0xD6() {
+    sprintf(descBuffer, "opD6(%s, %s)", readCharacter(1), getVar16u(2));
+    return 4;
+}
+extern "C" int op0xD7() {
+    sprintf(descBuffer, "opD7(\"%c%c%c%c\")", script[* position + 1], script[* position + 2], script[* position + 3], script[* position + 4]);
+    return 5;
+}
+extern "C" int op0xD8() {
+    sprintf(descBuffer, "opD8(%s, %s, %s) JUMP 0x%04X", readCharacter(1), getVar16u(2), getVar16u(4), read16u(6));
+    return 8;
+}
+extern "C" int op0xD9() {
+    sprintf(descBuffer, "SETUP_CHARACTER_MODEL(%s, %s)", getVar16u(1), getVar16u(3));
+    return 5;
+}
+extern "C" int op0xDA() {
+    sprintf(descBuffer, "WAIT_SETUP_CHARACTER_MODE()");
+    return 1;
+}
+extern "C" int op0xDB() {
+    sprintf(descBuffer, "%s = GET_CHARACTER_ID(%s)", getVarName(read16u(3)), getVar16u(1));
+    return 5;
+}
+extern "C" int op0xDC() {
+    sprintf(descBuffer, "opDC(%s, %s)", getVar16u(1), getVar16u(3));
+    return 5;
+}
+extern "C" int op0xDD() {
+    switch(script[* position + 1]) {
+        case 0:
+        {
+            sprintf(descBuffer, "DATA_READ(%d, %s)", script[* position + 1], getVar16u(2));
+            return 4;
+        }
+        default:
+        {
+            sprintf(descBuffer, "DATA_READ(%d) // wait completion", script[* position + 1]);
+            return 2;
+        }
+    }
+}
+// DE
+extern "C" int op0xDF() {
+    sprintf(descBuffer, "opDF(%s, %s, %s) // missing a byte at the end", getVar16s(1, script[* position + 5], 0x80), getVar16s(3, script[* position + 5], 0x40), getVar16u(6));
+    return 9;
 }
