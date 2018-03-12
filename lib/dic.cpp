@@ -50,6 +50,7 @@ char * getVar16u(int idx)
 
 char* getVar16s(int idx, int arg1, int arg2)
 {
+    // 4C 15 80 20 12 01 25 12 FE 2B 11 03 
 	if(arg1 & arg2)
 	{
 		short int var = read16s(idx);
@@ -573,6 +574,7 @@ extern "C" int op0x4B() {
 extern "C" int op0x4C() {
     //sprintf(descBuffer, "op4C(0x04X, %s, %s, %s, %s)", read16u(1), getVar16s(3, script[* position + 0xB], 0x40), getVar16s(5, script[* position + 0xB], 0x20), getVar16s(7, script[* position + 0xB], 0x10), getVar16s(9, script[* position + 0xB], 0x08));
     sprintf(descBuffer, "HolyFuck");
+    // 4C 15 80 20 12 01 25 12 FE 2B 11 03 
     return 0xC;
 }
 extern "C" int op0x4D() {
@@ -1264,7 +1266,8 @@ extern "C" int op0xB5() {
     return 3;
 }
 extern "C" int op0xB6() {
-    sprintf(descBuffer, "opB6(\"%c%c%c%c\")", script[* position + 1], script[* position + 2], script[* position + 3], script[* position + 4]);
+    //sprintf(descBuffer, "opB6(\"%c%c%c%c\")", script[* position + 1], script[* position + 2], script[* position + 3], script[* position + 4]);
+    sprintf(descBuffer, "opB6(%02X, %02X, %02X, %02X)", script[* position + 1], script[* position + 2], script[* position + 3], script[* position + 4]);
     return 5;
 }
 extern "C" int op0xB7() {
