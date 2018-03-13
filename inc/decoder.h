@@ -24,20 +24,19 @@ class Decoder {
 
         char * buffer;
 
-        char descBuffer[100];
     	int script_begin;
     	int * position;
     	unsigned char * script;
         vector<unsigned int> jumps;
 
         map<int, intFunc> switch_map;
+        map<int, intFunc> fe_map;
 
         int ret_code;
 
         bool output;
 
         void initMap();
-
     public:
         Decoder(unsigned char * script_data, int * offset);
         vector<unsigned int> * getJumps();
