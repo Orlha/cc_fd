@@ -1,15 +1,17 @@
 #ifndef dic_h
 #define dic_h
 
+#include <cstring>
 #include <cstdio>
 #include <vector>
-#include <cstring>
 
 using namespace std;
+
 int ret_code = 0;
 char descBuffer[100];
 char tempBuffer[20];
 vector<unsigned int> jumps;
+vector<unsigned int> calls;
 
 int * position;
 unsigned char * script;

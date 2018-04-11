@@ -58,11 +58,18 @@ void Decoder::initMap() {
     }
     getBuffer = (charFunc)dlsym(lib, "getBuffer");
     buffer = getBuffer();
+    getReturn = (intFunc)dlsym(lib, "getReturn");
+    getJmp = (vecFunc)dlsym(lib, "getJumps");
+    getCll = (vecFunc)dlsym(lib, "getCalls");
     return;
 }
 
 vector<unsigned int> * Decoder::getJumps() {
-    return &jumps;
+    return getJmp();
+}
+
+vector<unsigned int> * Decoder::getCalls() {
+    return getCll();
 }
 
 int Decoder::decode() {	
@@ -73,10 +80,10 @@ int Decoder::decode() {
     ret_code = 0;
 
     //code = 0x11;
-    //memset(buffer, 0, 100);
     auto search = switch_map.find(code);
     if (search != switch_map.end()) {
         code_length = search->second();
+        ret_code = getReturn();
     } else {
         if (code == 0xFE) {
             (*position) ++;
@@ -84,6 +91,7 @@ int Decoder::decode() {
             auto fe_search = fe_map.find(subOpcode);
             if (fe_search != fe_map.end()) {
                 code_length = fe_search->second();
+                ret_code = getReturn();
             } else {
                 sprintf(buffer, "FATAL: Unknown opcode 0xFE%02X", subOpcode);
                 code_length = 1;
@@ -95,10 +103,7 @@ int Decoder::decode() {
             ret_code = 4;
         }
     }
-
     printf(buffer);
-    //memset(buffer, 0, 100);
-
 
     * position += code_length;
 	printf("\n{");

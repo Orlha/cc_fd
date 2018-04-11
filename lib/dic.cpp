@@ -3,11 +3,25 @@
 extern "C" void init(unsigned char * script_data, int * offset) {
     script = script_data;
 	position = offset;
-    printf("Library initializated;\n");
+    //printf("Library initializated;\n");
 }
 
 extern "C" char * getBuffer() {
     return descBuffer;
+}
+
+extern "C" int getReturn() {
+    int ret = ret_code;
+    ret_code = 0;
+    return ret;
+}
+
+extern "C" vector<unsigned int> * getJumps() {
+    return &jumps;
+}
+
+extern "C" vector<unsigned int> * getCalls() {
+    return &calls;
 }
 
 unsigned short int read16u(int idx)
@@ -68,27 +82,26 @@ char* getVar16s(int idx, int arg1, int arg2)
 char* readCharacter(int offset)
 {
 	unsigned char val = script[* position + offset];
-
 	switch(val)
 	{
-	case 0xFF:
-		sprintf(tempBuffer, "PC0", val);
-		break;
-	case 0xFE:
-		sprintf(tempBuffer, "PC1", val);
-		break;
-	case 0xFD:
-		sprintf(tempBuffer, "PC2", val);
-		break;
-	case 0xFC:
-		sprintf(tempBuffer, "PC3", val);
-		break;
-	case 0xFB:
-		sprintf(tempBuffer, "THIS", val);
-		break;
-	default:
-		sprintf(tempBuffer, "Character(%d)", val);
-		break;
+        case 0xFF:
+            sprintf(tempBuffer, "PC0(%02X)", val);
+            break;
+        case 0xFE:
+            sprintf(tempBuffer, "PC1(%02X)", val);
+            break;
+        case 0xFD:
+            sprintf(tempBuffer, "PC2(%02X)", val);
+            break;
+        case 0xFC:
+            sprintf(tempBuffer, "PC3(%02X)", val);
+            break;
+        case 0xFB:
+            sprintf(tempBuffer, "THIS(%02X)", val);
+            break;
+        default:
+            sprintf(tempBuffer, "Character(%d)", val);
+            break;
 	}
 
 	return tempBuffer;
@@ -101,43 +114,43 @@ char* getVarName(int varIdx)
 	switch(varIdx)
 	{
         case 0x02:
-            sprintf(tempVarName, "ROOM_PARAM", varIdx);
+            sprintf(tempVarName, "ROOM_PARAM(0x%04X)", varIdx);
             break;
         case 0x04:
-            sprintf(tempVarName, "MULTI_CHOICE_RESULT", varIdx);
+            sprintf(tempVarName, "MULTI_CHOICE_RESULT(0x%04X)", varIdx);
             break;
         case 0x06:
-            sprintf(tempVarName, "MAP_ID", varIdx);
+            sprintf(tempVarName, "MAP_ID(0x%04X)", varIdx);
             break;
         case 0x08:
-            sprintf(tempVarName, "PREVIOUS_MAP_ID", varIdx);
+            sprintf(tempVarName, "PREVIOUS_MAP_ID(0x%04X)", varIdx);
             break;
         case 0x0C:
-            sprintf(tempVarName, "PARTY_MEMBER_0", varIdx);
+            sprintf(tempVarName, "PARTY_MEMBER_0(0x%04X)", varIdx);
             break;
         case 0x0E:
-            sprintf(tempVarName, "PARTY_MEMBER_1", varIdx);
+            sprintf(tempVarName, "PARTY_MEMBER_1(0x%04X)", varIdx);
             break;
         case 0x10:
-            sprintf(tempVarName, "PARTY_MEMBER_2", varIdx);
+            sprintf(tempVarName, "PARTY_MEMBER_2(0x%04X)", varIdx);
             break;
         case 0x18:
-            sprintf(tempVarName, "DIGIT_ENTRY_RESULT", varIdx);
+            sprintf(tempVarName, "DIGIT_ENTRY_RESULT(0x%04X)", varIdx);
             break;
         case 0x2A:
-            sprintf(tempVarName, "USED_KEY_ITEM", varIdx);
+            sprintf(tempVarName, "USED_KEY_ITEM(0x%04X)", varIdx);
             break;
         case 0x32:
-            sprintf(tempVarName, "BATTLE_RESULT", varIdx);
+            sprintf(tempVarName, "BATTLE_RESULT(0x%04X)", varIdx);
             break;
         case 0x34:
-            sprintf(tempVarName, "DEBUG_MODE", varIdx);
+            sprintf(tempVarName, "DEBUG_MODE(0x%04X)", varIdx);
             break;
         case 0x44:
-            sprintf(tempVarName, "CURRENT_FRAME", varIdx);
+            sprintf(tempVarName, "CURRENT_FRAME(0x%04X)", varIdx);
             break;
         case 0x4C:
-            sprintf(tempVarName, "SAVE_RESULT", varIdx);
+            sprintf(tempVarName, "SAVE_RESULT(0x%04X)", varIdx);
             break;
         default:
             if(varIdx >= 0x400)
@@ -226,10 +239,11 @@ int op0x02() {
             sprintf(descBuffer, "IF_JUMP(%s ~ %s, 0x%04X)", value1, value2, jumpOffset);
             break;
         default:
-            sprintf(descBuffer, "IF_JUMP(ALWAYS, 0x%04X) //? most probably a decompiler bug", value1, value2, jumpOffset);
+            sprintf(descBuffer, "IF_JUMP(%s ? %s, 0x%04X) //? most probably a decompiler bug", value1, value2, jumpOffset);
             break;
     }
     jumps.push_back(jumpOffset);
+    //printf("pushed jump %04X", jumpOffset);
     return 8;
 }
 int op0x03() {
@@ -242,6 +256,7 @@ int op0x04() {
 }
 int op0x05() {
     sprintf(descBuffer, "CALL(0x%04X)", read16u(1));
+    calls.push_back(read16u(1));
     return 3;
 }
 int op0x06() {
@@ -396,6 +411,7 @@ int op0x28() {
 }
 int op0x29() {
     sprintf(descBuffer, "op29(%s)", getVar16u(1));
+    return 3; // re-check
 }
 int op0x2A() {
     sprintf(descBuffer, "op2A(%s)", getVar16s(1, script[* position + 3], 0x80));
@@ -467,7 +483,7 @@ int op0x3A() {
 }
 int op0x3B() {
     sprintf(descBuffer, "STOP_SCRIPT_EXEC()");
-    ret_code = 1;
+    //ret_code = 1;
     return 1;
 }
 int op0x3C() {
@@ -604,15 +620,17 @@ int op0x4E() {
     return 5;
 }
 int op0x4F() { // Check this shit;
-    sprintf(descBuffer, "op4F(0x%02X, %s, %s)", readCharacter(1), readCharacter(3), readCharacter(4));
+    sprintf(descBuffer, "op4F(0x%02X, %s, %s)", read16u(1), readCharacter(3), readCharacter(4));
     return 5; 
 }
 int op0x50() {
     sprintf(descBuffer, "IF (scriptVar3 && 0x%02X) == 0 JUMP 0x%02X", read16u(1), read16u(3));
+    jumps.push_back(read16u(3));
     return 5;
 }
 int op0x51() {
     sprintf(descBuffer, "IF (scriptVar2 && 0x%02X) == 0 JUMP 0x%02X", read16u(1), read16u(3));
+    jumps.push_back(read16u(3));
     return 5;
 }
 // 52
@@ -623,10 +641,12 @@ int op0x54() {
 }
 int op0x55() {
     sprintf(descBuffer, "op55(%d) JUMP 0x%02X", script[* position + 1], read16u(2));
+    jumps.push_back(read16u(2));
 	return 4;
 }
 int op0x56() {
     sprintf(descBuffer, "op56(%d) JUMP 0x%02X", script[* position + 1], read16u(2));
+    jumps.push_back(read16u(2));
     return 4;
 }
 // 57
@@ -820,16 +840,19 @@ int op0x68() {
 int op0x69() {
     unsigned short int jumpOffset = read16u(3);
     sprintf(descBuffer, "IF %s == SCENARIO_FLAG JUMP 0x%04X", getVar16u(1), jumpOffset);
+    jumps.push_back(read16u(jumpOffset));
     return 5;
 }
 int op0x6A() {
     unsigned short int jumpOffset = read16u(3);
     sprintf(descBuffer, "IF %s < SCENARIO_FLAG JUMP 0x%04X", getVar16u(1), jumpOffset);
+    jumps.push_back(read16u(jumpOffset));
     return 5;
 }
 int op0x6B() {
     unsigned short int jumpOffset = read16u(3);
     sprintf(descBuffer, "IF %s != SCENARIO_FLAG JUMP 0x%04X", getVar16u(1), jumpOffset);
+    jumps.push_back(read16u(jumpOffset));
     return 5;
 }
 int op0x6C() {
@@ -845,14 +868,14 @@ int op0x6E() {
     return 5;
 }
 int op0x6F() {
-    unsigned long int arrayOffset = read16u(1);
+    unsigned int arrayOffset = read16u(1);
     sprintf(descBuffer, "%s = array_0x%02X[%s]", getVarName(read16u(3)), arrayOffset, getVar16u(5));
     //assert((decompileArray[arrayOffset]._type == TYPE_UNK) || (decompileArray[arrayOffset]._type == TYPE_ARRAY_8));
     //decompileArray[arrayOffset]._type = TYPE_ARRAY_8;
     return 7;
 }
 int op0x70() {
-    unsigned long int arrayOffset = read16u(1);
+    unsigned int arrayOffset = read16u(1);
     sprintf(descBuffer, "%s = array_0x%02X[%s] %d", getVarName(read16u(3)), arrayOffset, getVar16u(5), script[* position + 7]);
     //assert((decompileArray[arrayOffset]._type == TYPE_UNK) || (decompileArray[arrayOffset]._type == TYPE_ARRAY_16));
     //decompileArray[arrayOffset]._type = TYPE_ARRAY_16;
@@ -869,7 +892,8 @@ int op0x72() { //////////////////////////////// Look at it closely
 }
 int op0x73() {
     const char* varBitNumAsString = getVar16s(1, script[* position + 3], 0x80);
-    sprintf(descBuffer, "JUMP 0x%04X IF VAR_BIT[%s] CLEAR", read16u(4), varBitNumAsString, 0x80);
+    sprintf(descBuffer, "JUMP 0x%04X IF VAR_BIT[%s] CLEAR", read16u(4), varBitNumAsString);
+    jumps.push_back(read16u(4));
     return 6;
 }
 int op0x74() {
@@ -906,6 +930,7 @@ int op0x79() {
 
     sprintf(temp, ") JUMP 0x%04X", read16u(4));
     strcat(descBuffer, temp);
+    jumps.push_back(read16u(4));
     return 6;
 }
 int op0x7A() {
@@ -919,6 +944,7 @@ int op0x7A() {
 
     sprintf(temp, ") JUMP 0x%04X", read16u(4));
     strcat(descBuffer, temp);
+    jumps.push_back(read16u(4));
     return 6;
 }
 int op0x7B() {
@@ -1111,10 +1137,12 @@ int op0x93() {
 }
 int op0x94() {
     sprintf(descBuffer, "IF Character(%s) not in party, JUMP 0x%04X", getVar16u(1), read16u(3));
+    jumps.push_back(read16u(3));
     return 5;
 }
 int op0x95() {
     sprintf(descBuffer, "IF UNKCHECK_Character_op95(%s) JUMP 0x%04X", getVar16u(1), read16u(3));
+    jumps.push_back(read16u(3));
     return 5;
 }
 int op0x96() {
@@ -1255,10 +1283,12 @@ int op0xB2() {
 }
 int op0xB3() {
     sprintf(descBuffer, "opB3(%s) JUMP 0x%04X", readCharacter(1), read16u(2));
+    jumps.push_back(read16u(2));
     return 4;
 }
 int op0xB4() {
     sprintf(descBuffer, "IF_HAVE_ITEM(%s) ELSE JUMP 0x%04X", getVar16u(1), read16u(3));
+    jumps.push_back(read16u(3));
     return 5;
 }
 int op0xB5() {
@@ -1306,6 +1336,7 @@ int op0xBB() {
 }
 int op0xBC() {
     sprintf(descBuffer, "IF CHECK_MONEY(%d, %d) JUMP 0x%04X", read16u(1), read16u(3), read16u(5));
+    jumps.push_back(read16u(5));
     return 7;
 }
 int op0xBD() {
@@ -1392,6 +1423,7 @@ int op0xCC() {
 }
 int op0xCD() {
     sprintf(descBuffer, "opCD(%s) JUMP 0x%04X", getVar16u(1), read16u(3));
+    jumps.push_back(read16u(3));
     return 5;
 }
 int op0xCE() {
@@ -1404,6 +1436,7 @@ int op0xCF() {
 }
 int op0xD0() {
     sprintf(descBuffer, "opD0() JUMP 0x%04X", read16u(1));
+    jumps.push_back(read16u(1));
     return 3;
 }
 int op0xD1() {
@@ -1436,6 +1469,7 @@ int op0xD7() {
 }
 int op0xD8() {
     sprintf(descBuffer, "opD8(%s, %s, %s) JUMP 0x%04X", readCharacter(1), getVar16u(2), getVar16u(4), read16u(6));
+    jumps.push_back(read16u(6));
     return 8;
 }
 int op0xD9() {
@@ -1502,10 +1536,12 @@ int op0xE4() {
 }
 int op0xE5() {
     sprintf(descBuffer, "IF opE5(%s), JUMP 0x%04X", getVar16u(1), read16u(3));
+    jumps.push_back(read16u(3));
     return 5;
 }
 int op0xE6() {
     sprintf(descBuffer, "IF Character(%s) not recruited, JUMP 0x%04X", getVar16u(1), read16u(3));
+    jumps.push_back(read16u(3));
     return 5;
 }
 int op0xE7() {
@@ -1515,6 +1551,7 @@ int op0xE7() {
 // E8
 int op0xE9() {
     sprintf(descBuffer, "IF CHECK_FRAME(%s) JUMP 0x%04X", getVar16u(1), read16u(3));
+    jumps.push_back(read16u(3));
     return 5;
 }
 // EA

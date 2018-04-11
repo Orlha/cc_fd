@@ -1,7 +1,9 @@
 #ifndef reader_h
 #define reader_h
 
+#include <cstdio>
 #include <fstream>
+#include <cstring>
 #include <string>
 
 #include "entity.h"
@@ -23,9 +25,11 @@ class Reader {
 		Entity * entity;
         Decoder * decoder;
         vector<unsigned int> * jumps;
+        vector<unsigned int> * calls;
         
         bool atEntity();
-        bool atJump();
+        int atJump();
+        bool atCall();
     public:
     	Reader();
     	~Reader();
@@ -37,5 +41,7 @@ class Reader {
     	
     	int initDecoder();
         int decompile();
+
+        int getClosestJump();
 };
 #endif

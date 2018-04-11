@@ -23,6 +23,7 @@ bool Reader::atEntity() {
         for (int scr = 0; scr < 32; scr++) {
             int value = entity[ent].script[scr];
             if (value == pos - rel_pos && (value != 0x0000 || scr == 0)) {
+            // TODO: more clever check
                 cur_ent = ent;
                 cur_scr = scr;
                 printf("---------------------------\n");
@@ -34,14 +35,42 @@ bool Reader::atEntity() {
     }
     return ret_code;
 }
-bool Reader::atJump() {
+int Reader::atJump() {
     for(vector<unsigned int>::iterator it = jumps->begin(); it != jumps->end(); ++it) {
         int value = * it;
         if (value == pos - rel_pos) {
-            return true;
+            return value;
         }
     }
-    return false;
+    return -1;
+}
+
+bool Reader::atCall() {
+    for(vector<unsigned int>::iterator it = jumps->begin(); it != jumps->end(); ++it) {
+        int value = * it;
+        if (value == pos - rel_pos) {
+            printf("---------------------------\n");
+            printf("| Sub function 0x%04X\n", value);
+            printf("---------------------------\n");
+            return value;
+        }
+    }
+}
+
+int getClosestEnt() {
+    return 0;
+}
+
+int Reader::getClosestJump() {
+    int cur_pos = pos - rel_pos;
+    int res = 0;
+    for(vector<unsigned int>::iterator it = jumps->begin(); it != jumps->end(); ++it) {
+        int value = * it;
+        if (value > cur_pos && (value < res || res == 0)) {
+            res = value;
+        }
+    }
+    return res;
 }
 
 int Reader::initFile(string filename) {
@@ -108,6 +137,7 @@ int Reader::readEntities() {
 int Reader::initDecoder() {
     decoder = new Decoder(script, &pos);
     jumps = decoder->getJumps();
+    calls = decoder->getCalls();
 	return 0;
 }
 
@@ -128,13 +158,19 @@ int Reader::decompile() {
             // print
         }
 
+        if (atCall()) {
+            // print
+        }
+
+        /*
         if (atJump()) {
             //printf("If this thing is unk then it should be decompiled.\n");
         }
+        */
 
         
         int result = decoder->decode();
-        
+        //printf("res %d\n", result);
 		// succesfully decoded:
 		if (result == 0) {
 			continue;
@@ -145,7 +181,7 @@ int Reader::decompile() {
 			return result;
         }
         
-        if (atJump()) {
+        if (atJump() != -1) {
             continue;
         }
 		
@@ -171,11 +207,23 @@ int Reader::decompile() {
 					block = 0;
 					break;
 				} else {
-					block = entity[next_ent].script[next_scr];
+                    int nearJump = getClosestJump();
+                    int nearEnt = entity[next_ent].script[next_scr];
+                    if(nearJump != 0) {
+                        if (nearJump < nearEnt) {
+                            block = nearJump;
+                        } else {
+                            block = nearEnt;
+                        }
+                    } else {
+                        block = nearEnt;
+                    }
 				}
 			}
+            //printf("block: %0x04X\n", block);
 			if (block != 0) {
-				pos = block + rel_pos;	
+			    pos = block + rel_pos;
+                //printf("pos: %0x04X\n", pos);
 			}
 			int code_length = pos - pre_pos;
 			
