@@ -46,7 +46,7 @@ int Reader::atJump() {
 }
 
 bool Reader::atCall() {
-    for(vector<unsigned int>::iterator it = jumps->begin(); it != jumps->end(); ++it) {
+    for(vector<unsigned int>::iterator it = calls->begin(); it != calls->end(); ++it) {
         int value = * it;
         if (value == pos - rel_pos) {
             printf("---------------------------\n");
@@ -55,10 +55,21 @@ bool Reader::atCall() {
             return value;
         }
     }
+    return true;
 }
 
-int getClosestEnt() {
-    return 0;
+int Reader::getClosestEnt() {
+    int cur_pos = pos - rel_pos;
+    int res = 0;
+    for (int ent = 0; ent < entity_counter; ent++) {
+        for (int scr = 0; scr < 32; scr++) {
+            int value = entity[ent].script[scr];
+            if (value >= cur_pos && (value < res || res == 0)) {
+                res = value;
+            }
+        }
+    }
+    return res;
 }
 
 int Reader::getClosestJump() {
@@ -66,7 +77,19 @@ int Reader::getClosestJump() {
     int res = 0;
     for(vector<unsigned int>::iterator it = jumps->begin(); it != jumps->end(); ++it) {
         int value = * it;
-        if (value > cur_pos && (value < res || res == 0)) {
+        if (value >= cur_pos && (value < res || res == 0)) {
+            res = value;
+        }
+    }
+    return res;
+}
+
+int Reader::getClosestCall() {
+    int cur_pos = pos - rel_pos;
+    int res = 0;
+    for(vector<unsigned int>::iterator it = calls->begin(); it != calls->end(); ++it) {
+        int value = * it;
+        if (value >= cur_pos && (value < res || res == 0)) {
             res = value;
         }
     }
@@ -141,6 +164,26 @@ int Reader::initDecoder() {
 	return 0;
 }
 
+int lowestNotNull(int a, int b) {
+    if(a == 0 && b == 0) {
+        return -1;
+    }
+
+    if(a == 0 && b != 0) {
+        return b;
+    }
+
+    if(a != 0 && b == 0) {
+        return a;
+    }
+
+    if(a < b) {
+        return a;
+    } else {
+        return b;
+    }
+}
+
 int Reader::decompile() {
 	
 	if (pos - rel_pos < entity[0].script[0]) {
@@ -188,42 +231,32 @@ int Reader::decompile() {
 		// returned from STOP { 00}:
 		if (result == 1) {
 			int pre_pos = pos;
-			int next_ent = cur_ent;
-			int next_scr = cur_scr;
+			//int next_ent = cur_ent;
+			//int next_scr = cur_scr;
 			
 			int block = 0;
 			bool fin = false;
 			
 			while(block == 0) {
-				if (next_scr == 31) {
-					next_ent ++;
-					next_scr = 0;
-				} else {
-					next_scr ++;
-				}
-				
-				if (next_ent == entity_counter) {
-					fin = true;
-					block = 0;
-					break;
-				} else {
-                    int nearJump = getClosestJump();
-                    int nearEnt = entity[next_ent].script[next_scr];
-                    if(nearJump != 0) {
-                        if (nearJump < nearEnt) {
-                            block = nearJump;
-                        } else {
-                            block = nearEnt;
-                        }
+                int nearEnt = getClosestEnt();
+                int nearJump = getClosestJump();
+                int nearCall = getClosestCall();
+
+                int addr = lowestNotNull(nearJump, nearCall);
+                if (addr == -1) {
+                    if (nearEnt == 0) {
+                        fin = true;
+					    block = 0;
+					    break;
                     } else {
                         block = nearEnt;
                     }
-				}
+                } else {
+                    block = lowestNotNull(addr, nearEnt);
+                }
 			}
-            //printf("block: %0x04X\n", block);
 			if (block != 0) {
 			    pos = block + rel_pos;
-                //printf("pos: %0x04X\n", pos);
 			}
 			int code_length = pos - pre_pos;
 			

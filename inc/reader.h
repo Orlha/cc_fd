@@ -43,5 +43,7 @@ class Reader {
         int decompile();
 
         int getClosestJump();
+        int getClosestEnt();
+        int getClosestCall();
 };
 #endif
