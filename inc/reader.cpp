@@ -17,8 +17,7 @@ Reader::~Reader() {
 	delete[] entity;
 }
 
-bool Reader::atEntity() {
-    bool ret_code = false;
+void Reader::checkEntity() {
     for (int ent = 0; ent < entity_counter; ent++) {
         for (int scr = 0; scr < 32; scr++) {
             int value = entity[ent].script[scr];
@@ -29,12 +28,11 @@ bool Reader::atEntity() {
                 printf("---------------------------\n");
                 printf("| Entity %d script %d\n", cur_ent, cur_scr);
                 printf("---------------------------\n");
-                ret_code = true;
             }
         }
     }
-    return ret_code;
 }
+/*
 int Reader::atJump() {
     for(vector<unsigned int>::iterator it = jumps->begin(); it != jumps->end(); ++it) {
         int value = * it;
@@ -44,18 +42,18 @@ int Reader::atJump() {
     }
     return -1;
 }
+*/
 
-bool Reader::atCall() {
+void Reader::checkCall() {
     for(vector<unsigned int>::iterator it = calls->begin(); it != calls->end(); ++it) {
         int value = * it;
         if (value == pos - rel_pos) {
             printf("---------------------------\n");
             printf("| Sub function 0x%04X\n", value);
             printf("---------------------------\n");
-            return value;
+            return;
         }
     }
-    return true;
 }
 
 int Reader::getClosestEnt() {
@@ -168,15 +166,12 @@ int lowestNotNull(int a, int b) {
     if(a == 0 && b == 0) {
         return -1;
     }
-
     if(a == 0 && b != 0) {
         return b;
     }
-
     if(a != 0 && b == 0) {
         return a;
     }
-
     if(a < b) {
         return a;
     } else {
@@ -197,24 +192,10 @@ int Reader::decompile() {
 		
 	while(pos < length) {
         
-        if (atEntity()) {
-            // print
-        }
-
-        if (atCall()) {
-            // print
-        }
-
-        /*
-        if (atJump()) {
-            //printf("If this thing is unk then it should be decompiled.\n");
-        }
-        */
-
+        checkEntity();
+        checkCall();
         
         int result = decoder->decode();
-        //printf("res %d\n", result);
-		// succesfully decoded:
 		if (result == 0) {
 			continue;
 		}
@@ -223,16 +204,10 @@ int Reader::decompile() {
 		if (result == 4) {
 			return result;
         }
-        
-        if (atJump() != -1) {
-            continue;
-        }
 		
 		// returned from STOP { 00}:
 		if (result == 1) {
 			int pre_pos = pos;
-			//int next_ent = cur_ent;
-			//int next_scr = cur_scr;
 			
 			int block = 0;
 			bool fin = false;

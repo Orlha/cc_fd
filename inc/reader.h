@@ -27,9 +27,9 @@ class Reader {
         vector<unsigned int> * jumps;
         vector<unsigned int> * calls;
         
-        bool atEntity();
-        int atJump();
-        bool atCall();
+        void checkEntity();
+        //int atJump();
+        void checkCall();
     public:
     	Reader();
     	~Reader();
