@@ -51,5 +51,12 @@ int main(int argc, char** argv) {
 	if (ret_code != 0) {
 		printf("FATAL: Something terrible has happened;\n");
 	}
+
+    ret_code = reader.writeFin(filename_target);
+	if (ret_code != 0) {
+		printf("FATAL: Something terrible has happened;\n");
+	}
+
+    printf("Finished;\n");
 	return ret_code;
 }

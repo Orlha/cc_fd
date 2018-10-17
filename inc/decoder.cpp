@@ -8,7 +8,7 @@ Decoder::Decoder(unsigned char * script_data, int * offset) {
     script_begin = * position;
     output = false;
     ret_code = 0;
-    lib = dlopen("./libDic.so", RTLD_NOW);
+    lib = dlopen("./libdic.so", RTLD_NOW);
     if (lib == NULL) {
         cerr << dlerror() << endl;
         exit(-1);
@@ -17,6 +17,10 @@ Decoder::Decoder(unsigned char * script_data, int * offset) {
     get dinit = (get)dlsym(lib, "init");
     dinit(script, position);
     initMap();
+}
+
+Decoder::~Decoder() {
+    dlclose(lib);
 }
 
 void Decoder::initMap() {
@@ -72,13 +76,55 @@ vector<unsigned int> * Decoder::getCalls() {
     return getCll();
 }
 
-int Decoder::decode() {	
+int Decoder::decode() {
+#ifdef DCMPL_OUT
 	printf("0x%04x: ", * position - script_begin);
+#endif
 	int code = script[* position];	
     int pre_pos = * position;
     int code_length = 0;
     ret_code = 0;
 
+    if(code == 0xA3 || code == 0xC9) {
+        printf("Found battle: code %02X\n", code);
+        printf("Dump: ");
+        for(int i = 0; i < 7; ++i) {
+            printf("%02X ", script[(*position) + i]);
+        }
+        printf("\n");
+        //script[(*position) + 6] |= 1;
+        if(script[(*position) + 5] & 1) {
+            printf("    Flag 0x01 set: Keep field music in battle;\n");
+        }
+        if(script[(*position) + 5] & 2) {
+            printf("    Flag 0x02 set: Battle is losable;\n");
+        }
+        if(script[(*position) + 5] & 4) {
+            printf("    Flag 0x04 set: Dragoon clothes after battle;\n");
+        }
+        if(script[(*position) + 5] & 8) {
+            printf("    Flag 0x08 set: Unknown;\n");
+        }
+        if(script[(*position) + 5] & 0x10) {
+            printf("    Flag 0x10 set: No victory music;\n");
+        }
+        if(script[(*position) + 5] & 0x20) {
+            printf("    Flag 0x20 set: Keep battle music after battle;\n");
+        }
+        if(script[(*position) + 5] & 0x40) {
+            printf("    Flag 0x40 set: Brink of Death music;\n");
+        }
+        if(script[(*position) + 5] & 0x80) {
+            printf("    Flag 0x80 set: Unknown;\n");
+        }
+        /*
+        printf("\n Fix: ");
+        for(int i = 0; i < 7; ++i) {
+            printf("%02X ", script[(*position) + i]);
+        }
+        printf("\n");
+        */
+    }
     //code = 0x11;
     auto search = switch_map.find(code);
     if (search != switch_map.end()) {
@@ -103,14 +149,15 @@ int Decoder::decode() {
             ret_code = 4;
         }
     }
+    *position += code_length;
+#ifdef DCMPL_OUT
     printf(buffer);
-
-    * position += code_length;
 	printf("\n{");
 	for (int i = 0; i < * position - pre_pos; i++) {
 		printf("%02X ", script[pre_pos + i]);
 	}
 	printf("}\n");
 	fflush(stdout);
+#endif
 	return ret_code;
 }

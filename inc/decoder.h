@@ -45,6 +45,7 @@ class Decoder {
         void initMap();
     public:
         Decoder(unsigned char * script_data, int * offset);
+        ~Decoder();
         vector<unsigned int> * getJumps();
         vector<unsigned int> * getCalls();
         int decode();

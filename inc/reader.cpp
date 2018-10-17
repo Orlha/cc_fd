@@ -25,9 +25,11 @@ void Reader::checkEntity() {
             // TODO: more clever check
                 cur_ent = ent;
                 cur_scr = scr;
+#ifdef DCMPL_OUT
                 printf("---------------------------\n");
                 printf("| Entity %d script %d\n", cur_ent, cur_scr);
                 printf("---------------------------\n");
+#endif
             }
         }
     }
@@ -48,9 +50,11 @@ void Reader::checkCall() {
     for(vector<unsigned int>::iterator it = calls->begin(); it != calls->end(); ++it) {
         int value = * it;
         if (value == pos - rel_pos) {
+#ifdef DCMPL_OUT
             printf("---------------------------\n");
             printf("| Sub function 0x%04X\n", value);
             printf("---------------------------\n");
+#endif
             return;
         }
     }
@@ -95,6 +99,13 @@ int Reader::getClosestCall() {
 }
 
 int Reader::initFile(string filename) {
+    printf("File %s;\n", filename.c_str());
+
+    char subbuff[6];
+    memcpy(subbuff, &filename.c_str()[7], 5);
+    subbuff[5] = '\0';
+    printf("%s\n", subbuff);
+
 	ifstream file(filename.c_str(), ifstream::binary);
 	if (file) {
 		// get length of file:
@@ -117,7 +128,16 @@ int Reader::initFile(string filename) {
 		printf("Invalid file;");
 		return 11;
 	}
+
+    
 	return 0;
+}
+
+int Reader::writeFin(string filename) {
+    ofstream outfile(filename.c_str(), ofstream::binary);
+    outfile.write((const char *)script, length);
+    outfile.close();
+    return 0;
 }
 
 int Reader::readHeader() {
@@ -126,8 +146,10 @@ int Reader::readHeader() {
     {
     	int value;
     	memcpy(&value, &script[pos], sizeof(value));
+#ifdef DCMPL_OUT
     	printf("local[%02d] = ", pos / 4);
     	printf("0x%08X\n", value);
+#endif
     	pos += 4;
 	}
 	return 0;
@@ -182,12 +204,18 @@ int lowestNotNull(int a, int b) {
 int Reader::decompile() {
 	
 	if (pos - rel_pos < entity[0].script[0]) {
+#ifdef DCMPL_OUT
 		printf("0x0000: Pre-entity data: \n{");
+#endif
 		while(pos - rel_pos < entity[0].script[0]) {	
+#ifdef DCMPL_OUT
 			printf("%02X ", script[pos]);
+#endif
 			pos++;
 		}
+#ifdef DCMPL_OUT
 		printf("}\n");
+#endif
 	}
 		
 	while(pos < length) {
@@ -239,7 +267,7 @@ int Reader::decompile() {
 				code_length = length - pre_pos;
 				pos += code_length;
 			}
-			
+#ifdef DCMPL_OUT
 			if (code_length > 0) {
 				printf("0x%04x: Yet another garbage", pre_pos - rel_pos);
 				printf("\n{");
@@ -248,6 +276,7 @@ int Reader::decompile() {
 				}
 				printf("}\n");
 			}
+#endif
 		}
 	}
 	return 0;

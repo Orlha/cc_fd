@@ -34,6 +34,7 @@ class Reader {
     	Reader();
     	~Reader();
     	int initFile(string filename);
+        int writeFin(string filename);
     	
     	int readHeader();
     	int readEntCounter();

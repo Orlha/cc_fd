@@ -660,6 +660,7 @@ int op0x5A() {
     return 5;
 }
 int op0x5B() {
+    /*
     if(script[* position + 1] == 0) {
         char temp[50];
         sprintf(descBuffer, "op5B(%d, ", script[* position + 1]);
@@ -675,8 +676,38 @@ int op0x5B() {
         sprintf(temp, "%s)", getVar16s(8, script[* position + 10], 0x10));
         return 0xB;
     } else {
-        printf("op5B(%d)", script[* position + 1]);
+        sprintf(descBuffer, "op5B(%d)", script[* position + 1]);
         return 2;
+    }
+    */
+    switch(script[* position + 1] & 3) {
+        case 0:
+        case 1:
+        case 2: {
+            char temp[50];
+            sprintf(descBuffer, "op5B(%d, ", script[* position + 1]);
+            sprintf(temp, "%s, ", getVar16s(2, script[* position + 10], 0x80));
+            strcat(descBuffer, temp);
+
+            sprintf(temp, "%s, ", getVar16s(4, script[* position + 10], 0x40));
+            strcat(descBuffer, temp);
+
+            sprintf(temp, "%s, ", getVar16s(6, script[* position + 10], 0x20));
+            strcat(descBuffer, temp);
+
+            sprintf(temp, "%s)", getVar16s(8, script[* position + 10], 0x10));
+            return 0xB;
+        }
+        case 3: {
+            sprintf(descBuffer, "op5B(%d)", script[* position + 1]);
+            return 2;
+        }
+        default: {
+            //assert(0);
+            printf("JUMP_MOVE() //? Unrecognized argument, unable to determine length");
+            ret_code = 4;
+            return 0x2;
+        }
     }
 }
 int op0x5C() {
@@ -1200,6 +1231,7 @@ int op0xA2() {
 }
 int op0xA3() {
     sprintf(descBuffer, "BATTLE_opA3(%s, %s, %s)", getVar16u(1), getVar16u(3), getVar16u(5));
+    //printf("BATTLE_opA3(%s, %s, %s)", getVar16u(1), getVar16u(3), getVar16u(5));
     return 7;
 }
 int op0xA4() {
@@ -1407,6 +1439,7 @@ int op0xC8() {
 }
 int op0xC9() {
     sprintf(descBuffer, "BATTLE_opC9(%s, %s, %s)", getVar16u(1), getVar16u(3), getVar16u(5));
+    //printf("BATTLE_opC9(%s, %s, %s)", getVar16u(1), getVar16u(3), getVar16u(5));
     return 7;
 }
 int op0xCA() {
@@ -1676,7 +1709,7 @@ int op0xFE1A() {
     sprintf(descBuffer, "opFE1A()");
     return 1;
 }
-int opx0xFE1B() {
+int op0xFE1B() {
     sprintf(descBuffer, "SET_CURRENT_FRAME(%s)", getVar16u(1));
     return 3;
 }
