@@ -1582,6 +1582,10 @@ int op0xE7() {
     return 5;
 }
 // E8
+int op0xE8() {
+    sprintf(descBuffer, "opE8() //? Unknown, occurs in Sprigg House - D1448 // Length may be incorrect (!)");
+    return 2;
+}
 int op0xE9() {
     sprintf(descBuffer, "IF CHECK_FRAME(%s) JUMP 0x%04X", getVar16u(1), read16u(3));
     jumps.push_back(read16u(3));

@@ -30,7 +30,7 @@ void Decoder::initMap() {
         if (index == 0x57) continue;
         if (index == 0x58) continue;
         if (index == 0xDE) continue;
-        if (index == 0xE8) continue;
+        //if (index == 0xE8) continue;
         char funcName[10];
         sprintf(funcName, "op0x%02X", index);
         switch_map[index] = (intFunc)dlsym(lib, funcName);
@@ -140,11 +140,17 @@ int Decoder::decode() {
                 ret_code = getReturn();
             } else {
                 sprintf(buffer, "FATAL: Unknown opcode 0xFE%02X", subOpcode);
+#ifdef DEBUG
+                printf("FATAL: Unknown opcode 0xFE%02X", subOpcode);
+#endif
                 code_length = 1;
                 ret_code = 4;
             }
         } else {
             sprintf(buffer, "FATAL: unknown opcode %02X", code);
+#ifdef DEBUG
+            printf("FATAL: unknown opcode %02X", code);
+#endif
             code_length = 1;
             ret_code = 4;
         }

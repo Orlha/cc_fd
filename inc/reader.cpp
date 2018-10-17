@@ -219,6 +219,7 @@ int Reader::decompile() {
 	}
 		
 	while(pos < length) {
+        //printf("pos/length = %d/%d\n", pos, length);
         
         checkEntity();
         checkCall();
@@ -245,7 +246,19 @@ int Reader::decompile() {
                 int nearJump = getClosestJump();
                 int nearCall = getClosestCall();
 
+                //printf("js %lX\n", jumps->size());
+                /*
+                if(pos == 7194) {
+                    for(unsigned long i = 0; i < jumps->size(); ++i) {
+                        printf("Jump %X\n", (*jumps)[i]);
+                    }
+                    printf("Jump %X\n", (*jumps)[jumps->size() - 1]);
+                    printf("Call %X\n", (*calls)[calls->size() - 1]);
+                }
+                */
+
                 int addr = lowestNotNull(nearJump, nearCall);
+                //printf("ADDR: %X\n", addr);
                 if (addr == -1) {
                     if (nearEnt == 0) {
                         fin = true;
@@ -262,6 +275,8 @@ int Reader::decompile() {
 			    pos = block + rel_pos;
 			}
 			int code_length = pos - pre_pos;
+
+            if(code_length > length - pos) code_length = length - pos;
 			
 			if (fin) {
 				code_length = length - pre_pos;
@@ -279,5 +294,6 @@ int Reader::decompile() {
 #endif
 		}
 	}
+    //printf("pos fin %X\n", pos);
 	return 0;
 }
